@@ -42,34 +42,34 @@ ClrScr          proc
                 endp
 ;------------------------------------------------
 
-; ;------------------------------------------------
-; ;Display symbol, at the following place on the screen
-; ;------------------------------------------------
-; ;Entry:     AH - color attr
-; ;           AL - sym
-; ;           DH - x coordinate(0-80)
-; ;           DL - y coordinate(0-25)
-; ;Exit:      None
-; ;Expects:   ES = 0b800h
-; ;           Screen size is 25/80
-; ;Destroys:  BX, CX
-; ;------------------------------------------------
-; DispSym         proc
-;                 mov cx, 80d                     ; set window width
+;------------------------------------------------
+;Display symbol, at the following place on the screen
+;------------------------------------------------
+;Entry:     AH - color attr
+;           AL - sym
+;           DH - x coordinate(0-80)
+;           DL - y coordinate(0-25)
+;Exit:      None
+;Expects:   ES = 0b800h
+;           Screen size is 25/80
+;Destroys:  BX, CX
+;------------------------------------------------
+DispSym         proc
+                mov cx, 80d                     ; set window width
                 
-;                 mov bl, dl                      ; bx = y
-;                 imul bx, cx                     ; bx *= 80
+                mov bl, dl                      ; bx = y
+                imul bx, cx                     ; bx *= 80
             
-;                 mov cl, 8                       ; set 1 byte shift
-;                 shr dx, cl                      ; dx = x
+                mov cl, 8                       ; set 1 byte shift
+                shr dx, cl                      ; dx = x
 
-;                 add bx, dx                      ; bx += x
+                add bx, dx                      ; bx += x
 
-;                 mov word ptr es:[bx], ax
+                mov word ptr es:[bx], ax
 
-;                 ret
-;                 endp
-; ;------------------------------------------------
+                ret
+                endp
+;------------------------------------------------
 
 ;
 Real_start:     mov bx, 0b800h
