@@ -20,6 +20,13 @@ Main:           mov bx, 0b800h
 
                 call DispSym
 
+                mov dh, 1
+                mov dl, 1
+                mov cx, 10
+                xor bx, bx
+
+                call DrawSeq
+
                 EXIT
 end             Start
 
