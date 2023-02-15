@@ -47,29 +47,33 @@ ClrScr          proc
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  
+;Destroys:  BX, CX
 ;------------------------------------------------
 DispSym         proc
 
-                mov cl, 1                       ; set 1 byte shift
-                shl dx, cl                      ; dx = x
 
-                mov cx, 80d                     ; set window width
-                
                 push ax                         ; save symbol
 
+                sub dx, 0101h                   ; add bit mask to dx       
 
                 xor ax, ax                      ; set ax = 0
                 mov al, dl                      ; ax = y
 
                 push dx                         ; save cordinates
-                mul cx                          ; ax *= 80
+
+                mov cx, 80d                     ; set window width
+                mul cx                          ; ax *= 160
+
                 pop dx                          ; revive cordinates
 
-                mov cl, 8                       ; set 1 byte shift /2^8
+                mov cl, 8d                      ; set 1 byte shift /2^8
                 shr dx, cl                      ; dx = x
 
                 add ax, dx                      ; bx += x
+
+                mov cl, 1d                      ; set 1 bit shift *2^1
+                shl ax, cl                      ;
+                
                 mov bx, ax
 
                 pop ax                          ; revive symbol

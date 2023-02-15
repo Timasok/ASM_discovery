@@ -15,21 +15,23 @@ Main:           mov bx, 0b800h
 
                 ;-------kRGBirgb********
                 mov ax, 1000110000000011b       ; red heart
-                mov dx, 256*3 + 3        ; x = 3, y = 3
-                mov cx, 5
-
-Step:           push cx
-                push dx
-                push ax
+                mov dh, 80                      ; x = 3
+                mov dl, 25                      ; y = 2
 
                 call DispSym
 
-                pop ax
-                pop dx
-                pop cx
-
-                inc dh
-                loop Step
-
                 EXIT
 end             Start
+
+                ; mov cx, 5
+; Step:           push cx
+;                 push dx
+;                 push ax
+
+
+;                 pop ax
+;                 pop dx
+;                 pop cx
+
+;                 inc dh
+;                 loop Step
