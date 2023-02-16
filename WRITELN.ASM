@@ -15,8 +15,8 @@ Start:
 
             lodsb
 
-            cmp al, 20h                         ; if (line[0] != ' ') {return;}
-            jne Finish
+            ; cmp al, 20h                         ; if (line[0] != ' ') {return;}
+            ; jne Finish
 
 Write_name: 
             lodsb                               ; al = [si++]

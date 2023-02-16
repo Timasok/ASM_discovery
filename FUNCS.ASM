@@ -38,6 +38,45 @@ ClrScr          proc
 ;------------------------------------------------
 
 ;------------------------------------------------
+;Get video mem address according to cordinates
+;------------------------------------------------
+;Entry:     DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Exit:      BX - address in RAM
+;Expects:   
+;           Screen size is 25/80
+;Destroys:  AX, CX
+;------------------------------------------------
+GetVidMem       proc
+
+                sub dx, 0101h                   ; x-=1, y-=1       
+
+                xor ax, ax                      ; set ax = 0
+                mov al, dl                      ; ax = y
+
+                push dx                         ; save cordinates
+
+                mov cx, 80d                     ; set window width
+                mul cx                          ; ax *= 80
+
+                pop dx                          ; revive cordinates
+
+                mov cl, 8d                      ; set 1 byte shift /2^8
+                shr dx, cl                      ; dx = x
+
+                add ax, dx                      ; bx += x
+
+                mov cl, 1d                      ; set 1 bit shift *2^1
+                shl ax, cl                      ;
+                
+                mov bx, ax
+
+                ret
+                endp
+;------------------------------------------------
+
+
+;------------------------------------------------
 ;Display symbol, at the following place on the screen
 ;------------------------------------------------
 ;Entry:     AH - color attr
@@ -54,27 +93,7 @@ DispSym         proc
 
                 push ax                         ; save symbol
 
-                sub dx, 0101h                   ; add bit mask to dx       
-
-                xor ax, ax                      ; set ax = 0
-                mov al, dl                      ; ax = y
-
-                push dx                         ; save cordinates
-
-                mov cx, 80d                     ; set window width
-                mul cx                          ; ax *= 160
-
-                pop dx                          ; revive cordinates
-
-                mov cl, 8d                      ; set 1 byte shift /2^8
-                shr dx, cl                      ; dx = x
-
-                add ax, dx                      ; bx += x
-
-                mov cl, 1d                      ; set 1 bit shift *2^1
-                shl ax, cl                      ;
-                
-                mov bx, ax
+                call GetVidMem
 
                 pop ax                          ; revive symbol
 
@@ -83,7 +102,6 @@ DispSym         proc
                 ret
                 endp
 ;------------------------------------------------
-
 
 ;------------------------------------------------
 ;Draw sequence
@@ -143,7 +161,7 @@ DrawSeq         proc
                 mov ax, cx          ; y' = counter
                 xor cx, cx
 
-                mov cx, 0011h 
+                mov cx, 00FFh 
                 and bx, cx          ; get k2
 
                 mul bx              ; y'' *= k2
@@ -151,7 +169,7 @@ DrawSeq         proc
                 pop dx
                 push dx             ; revive dx nipped with mul
 
-                mov cx, 0011h 
+                mov cx, 00FFh 
                 and dx, cx          ; get y0
 
                 add ax, dx          ; y''' += y0
@@ -169,30 +187,36 @@ DrawSeq         proc
                 nop
                 xor cx, cx
 
-                mov al, ds:[sp]                 ; MAYBE here 1 and 3     
-                mov ah, ds:[sp+2]               ; write new 'x', y' to free reg
-                nop
+                mov si, sp
 
-                pop cx                          ; delete from stack 'x'
-                pop cx                          ; delete from stack 'y'
+                mov al, [si+2]                     ;
+                mov ah, [si+4]                   ; write new 'x', y' to free reg
+                nop
 
                 pop cx
 
                 push dx                          ; save x0,y0
 
+                mov si, sp
+
                 mov dx, ax                      ; set dx to use it DispSym
-                mov ax, ds:[sp+2]                  ; get ax
+
+                mov ax, [si+6]                  ; get ax
 
                 push cx                         ; save counter
                 push bx                         ; save k1, k2
                 call DispSym
 
                 pop bx                         ; revive k1, k2
-                pop cx                          ; revive counter
+                pop cx                         ; revive counter
                 pop dx                         ; revive x0, y0
+
+                add sp, 4                      ; delete from stack 'x', 'y' and ax value
 
                 loop @@Next
 
+                pop ax
+                
                 ret
                 endp
 ;------------------------------------------------

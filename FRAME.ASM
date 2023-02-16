@@ -5,25 +5,29 @@ locals @@
 
 Start:          jmp Main                        ; write video mem address beginning
 
-include FUNCS.ASM
+INCLUDE FUNCS.ASM
 
 Main:           mov bx, 0b800h
                 mov es, bx
+                xor bx, bx
                 
-                ;mov ax, 4eb1h                   ;add symbol that will paint the screen
-                ;call ClrScr
+                ; call ClrScr
 
                 ;-------kRGBirgb********
-                mov ax, 1000110000000011b       ; red heart
-                mov dh, 80                      ; x = 3
-                mov dl, 25                      ; y = 2
+                mov ax, 1000110000000000b + 14d        ; red node
+                ; mov dh, 80
+                ; mov dl, 25
 
-                call DispSym
+                ; call DispSym
 
-                mov dh, 1
-                mov dl, 1
-                mov cx, 10
-                xor bx, bx
+                ; mov ax, 4eb1h                   ;add symbol that will paint the screen
+                mov dh, 1                       ; x0
+                mov dl, 10                      ; y0
+
+                mov bh, 1                       ; k1
+                mov bl, 0                       ; k2
+
+                mov cx, 8                      ; counter
 
                 call DrawSeq
 
