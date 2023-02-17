@@ -75,7 +75,6 @@ GetVidMem       proc
                 endp
 ;------------------------------------------------
 
-
 ;------------------------------------------------
 ;Display symbol, at the following place on the screen
 ;------------------------------------------------
@@ -86,7 +85,7 @@ GetVidMem       proc
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  BX, CX, DX
+;Destroys:  BX, CX
 ;------------------------------------------------
 DispSym         proc
 
@@ -118,7 +117,7 @@ DispSym         proc
 ;           Screen size is 25/80
 ;Destroys:  CX
 ;------------------------------------------------
-DrawSeq         proc
+DrawLine        proc
 
                 push ax
                 xor ax, ax
@@ -216,25 +215,201 @@ DrawSeq         proc
                 loop @@Next
 
                 pop ax
-                
+
                 ret
                 endp
 ;------------------------------------------------
 
+;------------------------------------------------
+;Draw frame
+;------------------------------------------------
+;Entry:     AH - frame width
+;           AL - frame height
+;           DH - x left top coordinate(0-80)
+;           DL - y left top coordinate(0-25)
+;Exit:      None
+;Expects:   ES = 0b800h
+;           Screen size is 25/80
+;Destroys:  
+;------------------------------------------------
+DrawFrame       proc
 
-; ;------------------------------------------------
-; ;Draw frame
-; ;------------------------------------------------
-; ;Entry:     AH - frame width
-; ;           AL - frame height
-; ;           DH - x left top coordinate(0-80)
-; ;           DL - y left top coordinate(0-25)
-; ;Exit:      None
-; ;Expects:   ES = 0b800h
-; ;           Screen size is 25/80
-; ;Destroys:  
-; ;------------------------------------------------
-; DrawFrame       proc
+                push ax
+
+                mov ax, 0720h                  ; space, clear screen  
+                call ClrScr
+
+                xor ax, ax
+
+                pop ax
+                push ax
+                push dx
+
+                mov cx, ax                      ; x = x0
+                and cx, 0000h                   ; y = y0
+                add dx, cx
+
+                
+                mov ax, 0Fc9h                   ; draw left top
+
+                call DispSym
+                pop dx
+                pop ax
+
+
+                push ax
+                push dx
+
+                mov cx, ax                      
+                and cx, 0FF00h                  ; x = x0 + width - 1
+                sub cx, 0100h                   ; y = y0
+                add dx, cx
+                
+                mov ax, 0Fbbh                   ; draw right top
+
+                call DispSym
+                pop dx
+                pop ax
+
+                push ax
+                push dx
+
+                mov cx, ax                      
+                and cx, 0FFFFh                  ; x = x0 + width - 1
+                sub cx, 0101h                   ; y = y0 + height - 1
+                add dx, cx
+                
+                mov ax, 0Fbch                   ; draw right bottom
+
+                call DispSym
+
+                pop dx
+                pop ax
+
+                push ax
+                push dx
+
+                mov cx, ax                      
+                and cx, 00FFh                   ; x = x0
+                sub cx, 0001h                   ; y = y0 + height - 1
+                add dx, cx
+                
+                mov ax, 0Fc8h                   ; draw left bottom
+
+                call DispSym
+                pop dx
+                pop ax
+
+;================================================
+
+                push ax                         ; draw upper horizontal line
+                push dx
+                
+                mov bx, 0100h                   ; k1 = 1, k2 = 0
+
+                and ax, 0FF00h                  
+                sub ax,  0200h                  ; cx = width - 2
+
+                mov cl, 8d 
+                shr ax, cl                      ; shift ax left
+                
+                mov cx, ax                      ; set counter
+
+                mov ax, 0Fcdh                   ; set symbol
+
+                call DrawLine
+
+                pop dx
+                pop ax
+
+                push ax                         ; draw upper horizontal line
+                push dx
+                
+                mov cx, ax                      ; move width and height to draw finally
+                and cx, 00FFh                   ; get height
+                add dx, cx                      
+                sub dx, 0001h                   ; y = y0 + height - 1
+
+                mov bx, 0100h                   ; k1 = 1, k2 = 0
+
+                and ax, 0FF00h                  
+                sub ax,  0200h                  ; cx = width - 2
+
+                mov cl, 8d 
+                shr ax, cl                      ; shift ax left
+                
+                mov cx, ax                      ; set counter
+
+                mov ax, 0Fcdh                   ; set symbol
+
+                call DrawLine
+
+                pop dx
+                pop ax
+
+;================================================
+
+                push ax                         ; draw left vertical line
+                push dx
+                
+                mov bx, 0001h                   ; k1 = 0, k2 = 1
+
+                and ax, 00FFh                  
+                sub ax, 0002h                   ; cx = height - 2
+                
+                mov cx, ax                     
+
+                mov ax, 0Fbah
+
+                call DrawLine
+
+                pop dx
+                pop ax
+
+                push ax                         ; draw right vertical line
+                push dx
+                
+                mov cx, ax                      ; move height and height to draw finally
+                and cx, 0FF00h                  ; get heght
+                add dx, cx                      
+                sub dx, 0100h                   ; x = x0 + width - 1
+
+                mov bx, 0001h                   ; k1 = 0, k2 = 1
+
+                and ax, 00FFh                  
+                sub ax, 0002h                   ; cx = height - 2
+
+                mov cx, ax                      
+
+                mov ax, 0Fbah
+
+                call DrawLine
+
+                pop dx
+                pop ax
+
+                ret
+                endp
+;------------------------------------------------
+
+                ; ;-------kRGBirgb********
+                ; mov ax, 1000110000000000b + 14d        ; red node
+                ; ; mov dh, 80
+                ; ; mov dl, 25
+
+                ; ; call DispSym
+
+                ; ; mov ax, 4eb1h                   ;add symbol that will paint the screen
+                ; mov dh, 1                       ; x0
+                ; mov dl, 10                      ; y0
+
+                ; mov bh, 1                       ; k1
+                ; mov bl, 0                       ; k2
+
+                ; mov cx, 8                      ; counter
+
+                ; call DrawLine
+
 
                 ; pop
 
@@ -250,7 +425,3 @@ DrawSeq         proc
 ;                 pop ax
 
 ;                 mov word ptr es:[bx], ax
-
-;                 ret
-;                 endp
-; ;------------------------------------------------
