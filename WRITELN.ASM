@@ -1,33 +1,53 @@
-.model tiny
-.code
-org 100h
 
-Start:	
-		    mov bx, 0b800h					    ; write video mem address beginning
-            mov si, 00080h                      ; write line address
-		    mov es, bx
+INCLUDE FUNCS.ASM
 
-            mov bx, 80*25                       ; set window size
+;------------------------------------------------
+;Write line from cmd arg
+;------------------------------------------------
+;Entry:     DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  AX, BX, CX
+;------------------------------------------------
+Write_line      proc
 
-            lodsb
-            dec al
-            mov cl, al
+                mov si, 00080h                      ; write line address
 
-            lodsb
+                cmp dx, 0000h 
+                jne @@Set_Data_Shift
 
-            ; cmp al, 20h                         ; if (line[0] != ' ') {return;}
-            ; jne Finish
+                mov bx, 80*25+40
 
-Write_name: 
-            lodsb                               ; al = [si++]
+                jmp @@End_Data_Shift
 
-            mov byte ptr es:[bx], al
-            mov byte ptr es:[bx+1], 00001111b
-            add bx, 2
+@@Set_Data_Shift:
+        
+                call    Get_Vid_Mem                    ; set window size
 
-            loop Write_name
+@@End_Data_Shift:
 
-Finish:     mov ax, 4c00h
-            int 21h
+                lodsb
+                dec al                              ; don't count last symbol
+                mov cl, al
 
-end		    Start
+                lodsb
+
+                cmp al, 20h                         ; if (line[0] != ' ') {return;}
+                jne @@Finish
+
+@@Write_name: 
+                lodsb                               ; al = [si++]
+                
+                mov ah, 00001111b                  ; set white color - default
+
+                mov byte ptr es:[bx], al
+                mov byte ptr es:[bx+1], ah
+                add bx, 2
+
+                loop @@Write_name
+
+@@Finish:     
+                ret
+                endp
+;------------------------------------------------

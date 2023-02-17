@@ -14,6 +14,56 @@ EXIT            macro
                 endm
 ;------------------------------------------------
 
+
+;------------------------------------------------
+;Sets vid memory ptr to es
+;------------------------------------------------
+;Entry:     None
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  AX
+;------------------------------------------------
+SET_VID_PTR     macro
+                nop
+		        mov bx, 0b800h					    ; write video mem address beginning
+		        mov es, bx
+                nop
+                endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Pushes from following registers
+;------------------------------------------------
+;Entry:     None
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  None
+;------------------------------------------------
+PUSH_B_A_D      macro
+                nop
+                push bx
+                push ax
+                push dx
+                nop
+                endm
+;------------------------------------------------
+
+;Pop into following registers
+;------------------------------------------------
+;Entry:     None
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  None
+;------------------------------------------------
+POP_D_A_B       macro
+                nop
+                pop dx
+                pop ax
+                pop bx
+                nop
+                endm
+;------------------------------------------------
+
 ;------------------------------------------------
 ;Clear the screen
 ;------------------------------------------------
@@ -47,7 +97,7 @@ ClrScr          proc
 ;           Screen size is 25/80
 ;Destroys:  AX, CX
 ;------------------------------------------------
-GetVidMem       proc
+Get_Vid_Mem     proc
 
                 sub dx, 0101h                   ; x-=1, y-=1       
 
@@ -92,7 +142,7 @@ DispSym         proc
 
                 push ax                         ; save symbol
 
-                call GetVidMem
+                call Get_Vid_Mem
 
                 pop ax                          ; revive symbol
 
@@ -227,83 +277,78 @@ DrawLine        proc
 ;           AL - frame height
 ;           DH - x left top coordinate(0-80)
 ;           DL - y left top coordinate(0-25)
+;           BH - frame color 
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  
+;Destroys:  CX, 
 ;------------------------------------------------
 DrawFrame       proc
 
-                push ax
+                ; push bx
+                ; push ax
 
-                mov ax, 0720h                  ; space, clear screen  
-                call ClrScr
+                ; mov ax, 0720h                  ; space, clear screen  
+                ; call ClrScr
 
-                xor ax, ax
+                ; xor ax, ax
+                ; pop ax
+                ; pop bx
 
-                pop ax
-                push ax
-                push dx
+@@Main_part:
+                PUSH_B_A_D
 
                 mov cx, ax                      ; x = x0
                 and cx, 0000h                   ; y = y0
                 add dx, cx
 
-                
-                mov ax, 0Fc9h                   ; draw left top
+                mov ax, 00c9h                   ; draw left top
+                add ax, bx
 
                 call DispSym
-                pop dx
-                pop ax
+                POP_D_A_B
 
-
-                push ax
-                push dx
+                PUSH_B_A_D
 
                 mov cx, ax                      
                 and cx, 0FF00h                  ; x = x0 + width - 1
                 sub cx, 0100h                   ; y = y0
                 add dx, cx
                 
-                mov ax, 0Fbbh                   ; draw right top
+                mov ax, 00bbh                   ; draw right top
+                add ax, bx
 
                 call DispSym
-                pop dx
-                pop ax
+                POP_D_A_B
 
-                push ax
-                push dx
+
+                PUSH_B_A_D
 
                 mov cx, ax                      
                 and cx, 0FFFFh                  ; x = x0 + width - 1
                 sub cx, 0101h                   ; y = y0 + height - 1
                 add dx, cx
                 
-                mov ax, 0Fbch                   ; draw right bottom
+                mov ax, 00bch                   ; draw right bottom
+                add ax, bx
 
                 call DispSym
+                POP_D_A_B
 
-                pop dx
-                pop ax
-
-                push ax
-                push dx
+                PUSH_B_A_D
 
                 mov cx, ax                      
                 and cx, 00FFh                   ; x = x0
                 sub cx, 0001h                   ; y = y0 + height - 1
                 add dx, cx
                 
-                mov ax, 0Fc8h                   ; draw left bottom
+                mov ax, 00c8h                   ; draw left bottom
+                add ax, bx
 
                 call DispSym
-                pop dx
-                pop ax
+                POP_D_A_B
 
-;================================================
-
-                push ax                         ; draw upper horizontal line
-                push dx
+                PUSH_B_A_D                         ; draw upper horizontal line
                 
                 mov bx, 0100h                   ; k1 = 1, k2 = 0
 
@@ -315,15 +360,14 @@ DrawFrame       proc
                 
                 mov cx, ax                      ; set counter
 
-                mov ax, 0Fcdh                   ; set symbol
+                mov si, sp
+                mov ax, [si+4]  
+                mov al, 0cdh                   ; set symbol
 
                 call DrawLine
-
-                pop dx
-                pop ax
-
-                push ax                         ; draw upper horizontal line
-                push dx
+                POP_D_A_B
+                                                ; draw upper horizontal line
+                PUSH_B_A_D
                 
                 mov cx, ax                      ; move width and height to draw finally
                 and cx, 00FFh                   ; get height
@@ -340,17 +384,15 @@ DrawFrame       proc
                 
                 mov cx, ax                      ; set counter
 
-                mov ax, 0Fcdh                   ; set symbol
+                mov si, sp
+                mov ax, [si+4]  
+                mov al, 0cdh                   ; set symbol
 
                 call DrawLine
+                POP_D_A_B
 
-                pop dx
-                pop ax
-
-;================================================
-
-                push ax                         ; draw left vertical line
-                push dx
+                                                ; draw left vertical line
+                PUSH_B_A_D
                 
                 mov bx, 0001h                   ; k1 = 0, k2 = 1
 
@@ -359,16 +401,16 @@ DrawFrame       proc
                 
                 mov cx, ax                     
 
-                mov ax, 0Fbah
+                mov si, sp
+                mov ax, [si+4]  
+                mov al, 0bah                   ; set symbol
 
                 call DrawLine
+                POP_D_A_B
 
-                pop dx
-                pop ax
+                                                ; draw right vertical line
+                PUSH_B_A_D
 
-                push ax                         ; draw right vertical line
-                push dx
-                
                 mov cx, ax                      ; move height and height to draw finally
                 and cx, 0FF00h                  ; get heght
                 add dx, cx                      
@@ -380,48 +422,14 @@ DrawFrame       proc
                 sub ax, 0002h                   ; cx = height - 2
 
                 mov cx, ax                      
-
-                mov ax, 0Fbah
+                mov si, sp
+                mov ax, [si+4]  
+                mov al, 0bah                   ; set symbol
 
                 call DrawLine
+                POP_D_A_B
 
-                pop dx
-                pop ax
-
+@@Ending:
                 ret
                 endp
 ;------------------------------------------------
-
-                ; ;-------kRGBirgb********
-                ; mov ax, 1000110000000000b + 14d        ; red node
-                ; ; mov dh, 80
-                ; ; mov dl, 25
-
-                ; ; call DispSym
-
-                ; ; mov ax, 4eb1h                   ;add symbol that will paint the screen
-                ; mov dh, 1                       ; x0
-                ; mov dl, 10                      ; y0
-
-                ; mov bh, 1                       ; k1
-                ; mov bl, 0                       ; k2
-
-                ; mov cx, 8                      ; counter
-
-                ; call DrawLine
-
-
-                ; pop
-
-                ; mov ah, 0ch
-                ; mov al, 0c9h 
-;                 push ax
-;                 push dx
-
-;                 mov ah, 0ch
-;                 mov al, 0c9h 
-
-;                 pop dx
-;                 pop ax
-
-;                 mov word ptr es:[bx], ax
