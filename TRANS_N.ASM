@@ -13,6 +13,9 @@ Main:
 
                 mov ax, 0720h                  ; space, clear screen  
                 call ClrScr
+
+                mov dh, 22                      ; x0
+                mov dl, 10                      ; y0
                 
                 call Print_num
 

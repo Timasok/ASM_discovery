@@ -2,12 +2,17 @@
 ;Write number in binary
 ;------------------------------------------------
 ;Entry:     AX - number
-;           BX - video mem address, to save number
+;           DH - x left top coordinate(0-80)
+;           DL - y left top coordinate(0-25)
 ;Exit:      Nothing
 ;Expects:   ES = 0b800h
 ;Destroys:  BX, CX
 ;------------------------------------------------
 Write_bin       proc
+
+                push ax                         ; revive cords values
+                call Get_Vid_Mem
+                pop ax
 
                 mov cl, 15                  ; set counter
                 
@@ -29,6 +34,8 @@ Write_bin       proc
                 mov word ptr es:[bx], ax
                 add bx, 2
 
+                xor bx, bx
+
                 ret
                 endp
 ;------------------------------------------------
@@ -37,12 +44,17 @@ Write_bin       proc
 ;Write number in hex
 ;------------------------------------------------
 ;Entry:     AX - number
-;           BX - video mem address, to save number
+;           DH - x left top coordinate(0-80)
+;           DL - y left top coordinate(0-25)
 ;Exit:      Nothing
 ;Expects:   ES = 0b800h
 ;Destroys:  BX, CX, DX
 ;------------------------------------------------
 Write_hex       proc
+
+                push ax                         ; revive cords values
+                call Get_Vid_Mem
+                pop ax
 
                 mov cx, 4                       ; set counter
 
@@ -78,6 +90,8 @@ Write_hex       proc
                 pop cx
                 loop @@Next
                 
+                xor bx, bx
+
                 ret
                 endp
 
@@ -88,12 +102,17 @@ Hex_val:        db "0123456789ABCDEF"
 ;Write number in decimal
 ;------------------------------------------------
 ;Entry:     AX - number
-;           BX - video mem address, to save number
+;           DH - x left top coordinate(0-80)
+;           DL - y left top coordinate(0-25)
 ;Exit:      Nothing
 ;Expects:   ES = 0b800h
 ;Destroys:  CX, DX
 ;------------------------------------------------
 Write_dec       proc
+
+                push ax                         ; revive cords values
+                call Get_Vid_Mem
+                pop ax
 
                 push ax
                 mov cx, 0FFFFh          ; add poison to stack's bottom
@@ -126,7 +145,8 @@ Write_dec       proc
 @@End_second:
 
                 pop ax
-                
+                xor bx, bx
+
                 ret
                 endp
 ;------------------------------------------------
@@ -216,45 +236,35 @@ My_Atoi         proc
 ;------------------------------------------------
 Print_num       proc                
                 
+                push dx                         ; save coordinates
+
                 call My_Atoi
 
-                push ax
-                mov dh, 40                      ; x0
-                mov dl, 11                      ; y0
-                call Get_Vid_Mem
-                pop ax
+                pop dx
+                push dx
 
+                add dx, 0501h                   ; shift dec number start
                 call Write_dec  
 
-                push ax
-                mov dh, 40                      ; x0
-                mov dl, 12                      ; y0
-                call Get_Vid_Mem
-                pop ax
+                pop dx
+                push dx
 
+                add dx, 0502h                   ; shift dec number start
                 call Write_hex
 
-                push ax
-                mov dh, 40                      ; x0
-                mov dl, 13                      ; y0
-                call Get_Vid_Mem
-                pop ax
+                pop dx
+                push dx
 
+                add dx, 0503h                   ; shift dec number start
                 call Write_bin
 
-                mov bx, 0b800h
-                mov es, bx
-
-                xor bx, bx
                 xor cx, cx
-
 ;=======================krgbiRGB
-                mov bh, 00001100b               ; set color
-
+                mov bh, 00001100b               ; set frame color
                 mov ah, 22d                     ; frame width
-                mov al, 5d                     ; frame height
-                mov dh, 22                      ; x0
-                mov dl, 10                      ; y0
+                mov al, 5d                      ; frame height
+
+                pop dx                  
 
                 call drawFrame
 
