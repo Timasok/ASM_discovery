@@ -8,12 +8,12 @@ INCLUDE FUNCS.ASM
 ;Exit:      ES = 0b800h
 ;           SI = 00080h
 ;Expects:   Nothing
-;Destroys:  AX, BX, CX
+;Destroys:  AX, BX, CX, SI
 ;------------------------------------------------
 Write_line      proc
 
                 mov si, 0080h                      ; write line address
-
+                
                 cmp dx, 0000h 
                 jne @@Set_Data_Shift
 
@@ -22,9 +22,9 @@ Write_line      proc
                 jmp @@End_Data_Shift
 
 @@Set_Data_Shift:
-        
-                call    Get_Vid_Mem                    ; set window size
 
+                call    Get_Vid_Mem                 ; set window size
+ 
 @@End_Data_Shift:
 
                 lodsb
@@ -39,7 +39,7 @@ Write_line      proc
 @@Write_name: 
                 lodsb                               ; al = [si++]
                 
-                mov ah, 00001111b                  ; set white color - default
+                mov ah, 00001111b                   ; set white color - default
 
                 mov word ptr es:[bx], ax
                 add bx, 2

@@ -12,6 +12,7 @@ Write_bin       proc
                 mov cl, 15                  ; set counter
                 
 @@Next:         push ax
+                
                 shr ax, cl
                 and ax, 0001h
                 add ax, 00a30h              ; set green ascii code of '0'
@@ -21,6 +22,12 @@ Write_bin       proc
 
                 pop ax
                 loop @@Next 
+
+                and ax, 0001h
+                add ax, 00a30h              ; set green ascii code of '0'
+
+                mov word ptr es:[bx], ax
+                add bx, 2
 
                 ret
                 endp
@@ -76,6 +83,54 @@ Write_hex       proc
 
 Hex_val:        db "0123456789ABCDEF"                
 ;------------------------------------------------
+
+;------------------------------------------------
+;Write number in decimal
+;------------------------------------------------
+;Entry:     AX - number
+;           BX - video mem address, to save number
+;Exit:      Nothing
+;Expects:   ES = 0b800h
+;Destroys:  CX, DX
+;------------------------------------------------
+Write_dec       proc
+
+                push ax
+                mov cx, 0FFFFh          ; add poison to stack's bottom
+                push cx
+
+                mov cx, 10d             ; add value that we are going to delete
+
+@@First:        cmp ax, 0
+                je @@End_first
+
+                xor dx, dx
+                div cx
+
+                push dx
+
+                jmp @@First
+
+@@End_first:    
+@@Second:       
+                pop dx
+
+                cmp dx, 0FFFFh          ; check if poison
+                je @@End_second
+
+                add dx, 00a30h              ; set green ascii code of '0'
+                mov word ptr es:[bx], dx
+                add bx, 2
+
+                jmp @@Second
+@@End_second:
+
+                pop ax
+                
+                ret
+                endp
+;------------------------------------------------
+
 
 ;------------------------------------------------
 ;Check for space
@@ -143,6 +198,65 @@ My_Atoi         proc
                 mov ax, bx                          ; save number
 
                 mov byte ptr [si], cl               ; save si ptr
+
+                ret
+                endp
+;------------------------------------------------
+
+
+;------------------------------------------------
+;Print number from cmd args in different numeral systems
+;------------------------------------------------
+;Entry:     DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Exit:      None
+;Expects:   ES = 0b800h
+;           Cmd line has some arguments
+;Destroys:  AX, BX, CX, DX
+;------------------------------------------------
+Print_num       proc                
+                
+                call My_Atoi
+
+                push ax
+                mov dh, 40                      ; x0
+                mov dl, 11                      ; y0
+                call Get_Vid_Mem
+                pop ax
+
+                call Write_dec  
+
+                push ax
+                mov dh, 40                      ; x0
+                mov dl, 12                      ; y0
+                call Get_Vid_Mem
+                pop ax
+
+                call Write_hex
+
+                push ax
+                mov dh, 40                      ; x0
+                mov dl, 13                      ; y0
+                call Get_Vid_Mem
+                pop ax
+
+                call Write_bin
+
+                mov bx, 0b800h
+                mov es, bx
+
+                xor bx, bx
+                xor cx, cx
+
+;=======================krgbiRGB
+                mov bh, 00001100b               ; set color
+
+                mov ah, 22d                     ; frame width
+                mov al, 5d                     ; frame height
+                mov dh, 22                      ; x0
+                mov dl, 10                      ; y0
+
+                call drawFrame
 
                 ret
                 endp

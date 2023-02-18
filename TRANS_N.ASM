@@ -14,18 +14,7 @@ Main:
                 mov ax, 0720h                  ; space, clear screen  
                 call ClrScr
                 
-                call My_Atoi
-                
-                push ax
-
-                mov dh, 40                      ; x0
-                mov dl, 12                      ; y0
-
-                call Get_Vid_Mem
-
-                pop ax
-
-                call Write_hex
+                call Print_num
 
                 EXIT
 end             Start
