@@ -1,4 +1,3 @@
-
 INCLUDE FUNCS.ASM
 
 ;------------------------------------------------
@@ -6,7 +5,7 @@ INCLUDE FUNCS.ASM
 ;------------------------------------------------
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
-;Exit:      (Not defined)
+;Exit:      ES = 0b800h
 ;Expects:   Nothing
 ;Destroys:  AX, BX, CX
 ;------------------------------------------------
@@ -41,8 +40,7 @@ Write_line      proc
                 
                 mov ah, 00001111b                  ; set white color - default
 
-                mov byte ptr es:[bx], al
-                mov byte ptr es:[bx+1], ah
+                mov word ptr es:[bx], ax
                 add bx, 2
 
                 loop @@Write_name

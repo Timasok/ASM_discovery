@@ -19,7 +19,7 @@ EXIT            macro
 ;Sets vid memory ptr to es
 ;------------------------------------------------
 ;Entry:     None
-;Exit:      (Not defined)
+;Exit:      es = bx = 0b800h
 ;Expects:   Nothing
 ;Destroys:  AX
 ;------------------------------------------------
@@ -284,16 +284,6 @@ DrawLine        proc
 ;Destroys:  CX, 
 ;------------------------------------------------
 DrawFrame       proc
-
-                ; push bx
-                ; push ax
-
-                ; mov ax, 0720h                  ; space, clear screen  
-                ; call ClrScr
-
-                ; xor ax, ax
-                ; pop ax
-                ; pop bx
 
 @@Main_part:
                 PUSH_B_A_D
