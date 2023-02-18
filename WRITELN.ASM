@@ -6,12 +6,13 @@ INCLUDE FUNCS.ASM
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
 ;Exit:      ES = 0b800h
+;           SI = 00080h
 ;Expects:   Nothing
 ;Destroys:  AX, BX, CX
 ;------------------------------------------------
 Write_line      proc
 
-                mov si, 00080h                      ; write line address
+                mov si, 0080h                      ; write line address
 
                 cmp dx, 0000h 
                 jne @@Set_Data_Shift

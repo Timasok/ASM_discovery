@@ -13,18 +13,19 @@ Main:
 
                 mov ax, 0720h                  ; space, clear screen  
                 call ClrScr
+                
+                call My_Atoi
+                
+                push ax
 
                 mov dh, 40                      ; x0
                 mov dl, 12                      ; y0
 
                 call Get_Vid_Mem
-                mov ax, 47
-                
-                ; call Write_bin
+
+                pop ax
 
                 call Write_hex
-
-                ; call Write_line
 
                 EXIT
 end             Start
