@@ -64,6 +64,47 @@ POP_D_A_B       macro
 ;------------------------------------------------
 
 ;------------------------------------------------
+;Glues following parameteres coordinates
+;------------------------------------------------
+;Entry:     None
+;Exit:      dx = coords in format
+;Expects:   Nothing
+;Destroys:  BX, DX
+;------------------------------------------------
+GLUE_P15_P14    macro
+                nop
+                mov dx, [bp+32]                 ; add p15 x0
+
+                xchg dh, dl
+                mov bx, [bp+30]                 ; add p14 y0
+
+                add dx, bx                      ; p5.inner_func throw left top coordinates
+                nop
+                endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Sets color masks(only in frame func)
+;------------------------------------------------
+;Entry:     None
+;Exit:      dh - bordermask, bh - backgrmask
+;Expects:   Nothing
+;Destroys:  BX, DX, CX
+;------------------------------------------------
+GET_COLOR_P11   macro
+                nop
+                xor bx, bx
+                xor cx, cx
+                mov cl, 8                       ; shift
+                
+                mov dx, [bp+24]                 ; set color masks: dh - bordermask               
+                mov bh, dh                      ; set color masks: bh - backgrmask
+                shl dx, cl
+                nop
+                endm
+;------------------------------------------------
+
+;------------------------------------------------
 ;Clear the screen
 ;------------------------------------------------
 ;Entry:     AH - color attr
@@ -94,11 +135,12 @@ ClrScr          proc
 ;Exit:      BX - address in RAM
 ;Expects:   
 ;           Screen size is 25/80
-;Destroys:  AX, CX
+;Destroys:  AX
 ;------------------------------------------------
 Get_Vid_Mem     proc
 
-                push dx                         ; sav unchanged coordinates
+                push cx
+                push dx                         ; save unchanged coordinates
                 sub dx, 0101h                   ; x-=1, y-=1       
 
                 xor ax, ax                      ; set ax = 0
@@ -121,6 +163,7 @@ Get_Vid_Mem     proc
                 
                 mov bx, ax
                 pop dx
+                pop cx
 
                 ret
                 endp
@@ -136,11 +179,9 @@ Get_Vid_Mem     proc
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  BX, CX
+;Destroys:  BX
 ;------------------------------------------------
 DispSym         proc
-
-
                 push ax                         ; save symbol
 
                 call Get_Vid_Mem
@@ -436,18 +477,19 @@ DrawFrame       proc
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  AX, BX, CX, DX 
+;Destroys:  AX, DX 
 ;------------------------------------------------
 Draw_stripe     proc
                 push bp
                 mov bp, sp
 
-                mov dx, [bp+12]                  ; set coordinates
+                mov dx, [bp+12]                 ; set coordinates
 
                 mov ax, [bp+4]                  ; push left symbol      
                 call DispSym
 
-                mov cx, [bp+10]                  ; set counter - p4
+                push cx
+                mov cx, [bp+10]                 ; set counter - p4
 
                 mov ax, [bp+6]                  ; push middle symbol
                 add dx, 0100h                   ; inc x coordinate
@@ -459,6 +501,7 @@ Draw_stripe     proc
 
                 pop cx
                 loop @@Next
+                pop cx
 
                 mov ax, [bp+8]                  ; push right symbol      
                 call DispSym
@@ -475,7 +518,7 @@ Draw_stripe     proc
 ;           p14 - left top y coordinate
 ;           p13 - frame width
 ;           p12 - frame height
-;           p11 - frame color
+;           p11 - frame color h-byte - Background l-byte - borDer color
 ;           p10 - frame style (if p10 = 5 custom mode, then p1-p10 fill, otherwise consider them 0)
 ;           p9  - right  bottom  symbol
 ;           p8  - middle bottom  symbol
@@ -492,51 +535,122 @@ Draw_stripe     proc
 ;Destroys:  
 ;------------------------------------------------
 Draw_frame      proc
-                mov bp, sp
                 push bp
+                mov bp, sp
 
                 mov bx, [bp+22]                 ; get frame style - p10
 
                 cmp bx, 5d                      ; if(style == 5)
                 je @@Main_body
-                ja @@Finish
+                ja @@Finish_trans
 
                 cmp bx, 0d                      ; if(style <= 0)
-                jbe @@Finish
+                jbe @@Finish_trans
 
 @@Not_custom_style:                             ; fill parameters p1-p9 from memory
 
 @@Main_body:                    
 
-                mov dx, [bp+32]                 ; add p15 x0
-                
-                mov cl, 8                       ; shift
-                shr dx, cl
+;======================================== draw upper part
 
-                mov bx, [bp+30]                 ; add p14 y0
-
-                add dx, bx                      ; p5.inner_func throw left top coordinates
+                GLUE_P15_P14
                 push dx
 
+                GET_COLOR_P11
+
+                xor ax, ax  
                 mov ax, [bp+28]                 ; p13.input -> p4.inner_func throw frame width
                 push ax
 
                 mov ax, [bp+8]                  ; p3.input ->  p3.inner_func set right top symbol
+                add ax, dx
                 push ax
 
                 mov ax, [bp+6]                  ; p2.input ->  p2.inner_func  set middle symbol
+                add ax, dx
                 push ax
 
                 mov ax, [bp+4]                  ; p1.input - > p1.inner_func set left top symbol
+                add ax, dx
                 push ax
 
                 call Draw_stripe
 
-;================================ draw upper part
+;======================================== draw middle part
 
-                                                ; draw middle part
-                                                ; draw lower part
+                mov si, sp
+
+                GET_COLOR_P11
+                mov ax, [bp+12]                 ; p5.input ->  p2.inner_func  set middle symbol
+                mov ah, bh                      ; set backgroundcolor
+                mov word ptr [si+2], ax        
+
+                mov ax, [bp+14]                 ; p6.input ->  p3.inner_func set right top symbol
+                mov byte ptr [si+4], al
+
+                mov ax, [bp+10]                 ; p4.input - > p1.inner_func set left top symbol
+                mov byte ptr [si], al         
+
+;################################################                
+                jmp @@Skip
+
+@@Finish_trans: jmp @@Finish
+@@Skip:         
+;################################################       
+ 
+                ; mov cx, [bp+26]                 ; p12.input get height
+                ; sub cx, 2                       ; get max cx
+
+                mov cx, 3
+@@Next:         
+                ; mov ax, [bp+26]               ; ax = height-2 (max counter value)
+                ; sub ax, 2
+                ; sub ax, cx                    ; count shift(ax = cxMax-cx)
+
+                mov dx,[si+8]                   ; get last dx value
+                ; add dx, ax                    ; change dx 
+                inc dx                          ; rekkurent function    
+
+                mov word ptr [si+8], dx         ; p5.inner_func set left coords symbol
+
+                call Draw_stripe
+
+                loop @@Next
+
+;========================================  draw lower part                
+
+
+                mov si, sp
+
+                GLUE_P15_P14
                 
+                mov bx, [bp+26]                 ; p12.input get height
+                
+                sub dx, 0001h           
+                add dx, bx                      ; change y = y0 + height -1
+                mov word ptr [si+8], dx         ; p5.inner_func set right top symbol coordinates
+                                                
+                                                ; width stays the same hopefully
+
+                mov ax, [bp+20]                 ; p9.input ->  p3.inner_func set right top symbol
+                mov byte ptr [si+4], al
+
+                GET_COLOR_P11
+                mov ax, [bp+18]                 ; p8.input ->  p2.inner_func  set middle symbol
+                mov ah, dh                      ; change color back! set border color
+                mov word ptr [si+2], ax  
+
+                mov ax, [bp+16]                 ; p7.input - > p1.inner_func set left top symbol
+                mov byte ptr [si], al                
+
+                call Draw_stripe
+
+;========================================
+                pop ax                          ; clean stack
+                pop ax
+                pop ax
+                pop ax
+                pop ax
 
 @@Finish:
                 pop bp
