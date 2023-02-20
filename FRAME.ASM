@@ -7,7 +7,9 @@ Start:          jmp Main                        ; write video mem address beginn
 
 INCLUDE FUNCS.ASM
 
-Main:           mov bx, 0b800h
+Main:           
+
+                mov bx, 0b800h
                 mov es, bx
 
                 mov ax, 0720h                  ; space, clear screen  
@@ -21,8 +23,8 @@ Main:           mov bx, 0b800h
 
                 mov ah, 28h                     ; frame width
                 mov al, 0ch                     ; frame height
-                mov dh, 20                      ; x0
-                mov dl, 8                       ; y0
+                mov dh, 14h                      ; x0
+                mov dl, 8h                       ; y0
 
                 call drawFrame
 

@@ -14,7 +14,6 @@ EXIT            macro
                 endm
 ;------------------------------------------------
 
-
 ;------------------------------------------------
 ;Sets vid memory ptr to es
 ;------------------------------------------------
@@ -99,6 +98,7 @@ ClrScr          proc
 ;------------------------------------------------
 Get_Vid_Mem     proc
 
+                push dx                         ; sav unchanged coordinates
                 sub dx, 0101h                   ; x-=1, y-=1       
 
                 xor ax, ax                      ; set ax = 0
@@ -110,7 +110,7 @@ Get_Vid_Mem     proc
                 mul cx                          ; ax *= 80
 
                 pop dx                          ; revive cordinates
-
+                
                 mov cl, 8d                      ; set 1 byte shift /2^8
                 shr dx, cl                      ; dx = x
 
@@ -120,6 +120,7 @@ Get_Vid_Mem     proc
                 shl ax, cl                      ;
                 
                 mov bx, ax
+                pop dx
 
                 ret
                 endp
@@ -356,7 +357,7 @@ DrawFrame       proc
 
                 call DrawLine
                 POP_D_A_B
-                                                ; draw upper horizontal line
+                                                ; draw down horizontal line
                 PUSH_B_A_D
                 
                 mov cx, ax                      ; move width and height to draw finally
@@ -420,6 +421,125 @@ DrawFrame       proc
                 POP_D_A_B
 
 @@Ending:
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+;Draw stripe - part of the frame
+;------------------------------------------------
+;Entry:     p5 - left top coordinates
+;           p4 - stripe width not counting borders
+;           p3 - right symbol
+;           p2 - middle symbol
+;           p1 - left symbol
+;Exit:      None
+;Expects:   ES = 0b800h
+;           Screen size is 25/80
+;Destroys:  AX, BX, CX, DX 
+;------------------------------------------------
+Draw_stripe     proc
+                push bp
+                mov bp, sp
+
+                mov dx, [bp+12]                  ; set coordinates
+
+                mov ax, [bp+4]                  ; push left symbol      
+                call DispSym
+
+                mov cx, [bp+10]                  ; set counter - p4
+
+                mov ax, [bp+6]                  ; push middle symbol
+                add dx, 0100h                   ; inc x coordinate
+@@Next:
+                push cx
+
+                call DispSym
+                add dx, 0100h                   ; inc x coordinate
+
+                pop cx
+                loop @@Next
+
+                mov ax, [bp+8]                  ; push right symbol      
+                call DispSym
+
+                pop bp
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+;Draw frame - director's version
+;------------------------------------------------
+;Entry:     p15 - left top x coordinate p15 = [bp + (15+1)*2]
+;           p14 - left top y coordinate
+;           p13 - frame width
+;           p12 - frame height
+;           p11 - frame color
+;           p10 - frame style (if p10 = 5 custom mode, then p1-p10 fill, otherwise consider them 0)
+;           p9  - right  bottom  symbol
+;           p8  - middle bottom  symbol
+;           p7  - left   bottom  symbol
+;           p6  - right  central symbol
+;           p5  - middle central symbol
+;           p4  - left   central symbol
+;           p3  - right  top     symbol
+;           p2  - middle top     symbol
+;           p1  - left   top     symbol
+;Exit:      None
+;Expects:   ES = 0b800h
+;           Screen size is 25/80
+;Destroys:  
+;------------------------------------------------
+Draw_frame      proc
+                mov bp, sp
+                push bp
+
+                mov bx, [bp+22]                 ; get frame style - p10
+
+                cmp bx, 5d                      ; if(style == 5)
+                je @@Main_body
+                ja @@Finish
+
+                cmp bx, 0d                      ; if(style <= 0)
+                jbe @@Finish
+
+@@Not_custom_style:                             ; fill parameters p1-p9 from memory
+
+@@Main_body:                    
+
+                mov dx, [bp+32]                 ; add p15 x0
+                
+                mov cl, 8                       ; shift
+                shr dx, cl
+
+                mov bx, [bp+30]                 ; add p14 y0
+
+                add dx, bx                      ; p5.inner_func throw left top coordinates
+                push dx
+
+                mov ax, [bp+28]                 ; p13.input -> p4.inner_func throw frame width
+                push ax
+
+                mov ax, [bp+8]                  ; p3.input ->  p3.inner_func set right top symbol
+                push ax
+
+                mov ax, [bp+6]                  ; p2.input ->  p2.inner_func  set middle symbol
+                push ax
+
+                mov ax, [bp+4]                  ; p1.input - > p1.inner_func set left top symbol
+                push ax
+
+                call Draw_stripe
+
+;================================ draw upper part
+
+                                                ; draw middle part
+                                                ; draw lower part
+                
+
+@@Finish:
+                pop bp
                 ret
                 endp
 ;------------------------------------------------
