@@ -19,5 +19,11 @@ Main:
                 
                 call Print_num
 
+                mov dh, 50                      ; x0
+                mov dl, 10                      ; y0
+                
+                call Print_num
+
+
                 EXIT
 end             Start

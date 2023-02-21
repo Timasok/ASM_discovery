@@ -1,110 +1,4 @@
 ;------------------------------------------------
-;Exits to DOS
-;------------------------------------------------
-;Entry:     None
-;Exit:      (Not defined)
-;Expects:   Nothing
-;Destroys:  AX
-;------------------------------------------------
-EXIT            macro
-                nop
-                mov ax, 4c00h
-                int 21h
-                nop
-                endm
-;------------------------------------------------
-
-;------------------------------------------------
-;Sets vid memory ptr to es
-;------------------------------------------------
-;Entry:     None
-;Exit:      es = bx = 0b800h
-;Expects:   Nothing
-;Destroys:  AX
-;------------------------------------------------
-SET_VID_PTR     macro
-                nop
-		        mov bx, 0b800h					    ; write video mem address beginning
-		        mov es, bx
-                nop
-                endm
-;------------------------------------------------
-
-;------------------------------------------------
-;Pushes from following registers
-;------------------------------------------------
-;Entry:     None
-;Exit:      (Not defined)
-;Expects:   Nothing
-;Destroys:  None
-;------------------------------------------------
-PUSH_B_A_D      macro
-                nop
-                push bx
-                push ax
-                push dx
-                nop
-                endm
-;------------------------------------------------
-
-;Pop into following registers
-;------------------------------------------------
-;Entry:     None
-;Exit:      (Not defined)
-;Expects:   Nothing
-;Destroys:  None
-;------------------------------------------------
-POP_D_A_B       macro
-                nop
-                pop dx
-                pop ax
-                pop bx
-                nop
-                endm
-;------------------------------------------------
-
-;------------------------------------------------
-;Glues following parameteres coordinates
-;------------------------------------------------
-;Entry:     None
-;Exit:      dx = coords in format
-;Expects:   Nothing
-;Destroys:  BX, DX
-;------------------------------------------------
-GLUE_P15_P14    macro
-                nop
-                mov dx, [bp+32]                 ; add p15 x0
-
-                xchg dh, dl
-                mov bx, [bp+30]                 ; add p14 y0
-
-                add dx, bx                      ; p5.inner_func throw left top coordinates
-                nop
-                endm
-;------------------------------------------------
-
-;------------------------------------------------
-;Sets color masks(only in frame func)
-;------------------------------------------------
-;Entry:     None
-;Exit:      dh - bordermask, bh - backgrmask
-;Expects:   Nothing
-;Destroys:  BX, DX, CX
-;------------------------------------------------
-GET_COLOR_P11   macro
-                nop
-                xor bx, bx
-                xor cx, cx
-                mov cl, 8                       ; shift
-                
-                mov dx, [bp+24]                 ; set color masks: dh - bordermask               
-                mov bh, dh                      ; set color masks: bh - backgrmask
-                shl dx, cl
-                nop
-                endm
-;------------------------------------------------
-
-;------------------------------------------------
 ;Clear the screen
 ;------------------------------------------------
 ;Entry:     AH - color attr
@@ -116,10 +10,7 @@ GET_COLOR_P11   macro
 ClrScr          proc
                 xor bx, bx
                 mov cx, 80d*25d                 ;symbols in the screen
-
-                mov word ptr es:[bx], ax
-
-@@Next:         mov word ptr es:[bx], ax
+@@Next:         mov es:[bx], ax
                 add bx, 2 
                 loop @@Next
 
@@ -127,47 +18,6 @@ ClrScr          proc
                 endp
 ;------------------------------------------------
 
-;------------------------------------------------
-;Get video mem address according to cordinates
-;------------------------------------------------
-;Entry:     DH - x0 coordinate(0-80)
-;           DL - y0 coordinate(0-25)
-;Exit:      BX - address in RAM
-;Expects:   
-;           Screen size is 25/80
-;Destroys:  AX
-;------------------------------------------------
-Get_Vid_Mem     proc
-
-                push cx
-                push dx                         ; save unchanged coordinates
-                sub dx, 0101h                   ; x-=1, y-=1       
-
-                xor ax, ax                      ; set ax = 0
-                mov al, dl                      ; ax = y
-
-                push dx                         ; save cordinates
-
-                mov cx, 80d                     ; set window width
-                mul cx                          ; ax *= 80
-
-                pop dx                          ; revive cordinates
-                
-                mov cl, 8d                      ; set 1 byte shift /2^8
-                shr dx, cl                      ; dx = x
-
-                add ax, dx                      ; bx += x
-
-                mov cl, 1d                      ; set 1 bit shift *2^1
-                shl ax, cl                      ;
-                
-                mov bx, ax
-                pop dx
-                pop cx
-
-                ret
-                endp
-;------------------------------------------------
 
 ;------------------------------------------------
 ;Display symbol, at the following place on the screen

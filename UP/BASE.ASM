@@ -1,0 +1,75 @@
+;------------------------------------------------
+;Exits to DOS
+;------------------------------------------------
+;Entry:     None
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  AX
+;------------------------------------------------
+EXIT            macro
+                nop
+                mov ax, 4c00h
+                int 21h
+                nop
+                endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Sets vid memory ptr to es
+;------------------------------------------------
+;Entry:     None
+;Exit:      es = 0b800h
+;Expects:   Nothing
+;Destroys:  BX, ES
+;------------------------------------------------
+SET_VID_PTR     macro
+                nop
+		        mov bx, 0b800h					    ; write video mem address beginning
+		        mov es, bx
+                xor bx, bx
+                nop
+                endm
+;------------------------------------------------
+
+
+;------------------------------------------------
+;Get video mem address according to cordinates
+;------------------------------------------------
+;Entry:     DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Exit:      BX - address in RAM
+;Expects:   
+;           Screen size is 25/80
+;Destroys:  AX
+;------------------------------------------------
+Get_Vid_Mem     proc
+
+                push cx
+                push dx                         ; save unchanged coordinates
+                sub dx, 0101h                   ; x-=1, y-=1       
+
+                xor ax, ax                      ; set ax = 0
+                mov al, dl                      ; ax = y
+
+                push dx                         ; save cordinates
+
+                mov cx, 80d                     ; set window width
+                mul cx                          ; ax *= 80
+
+                pop dx                          ; revive cordinates
+                
+                mov cl, 8d                      ; set 1 byte shift /2^8
+                shr dx, cl                      ; dx = x
+
+                add ax, dx                      ; bx += x
+
+                mov cl, 1d                      ; set 1 bit shift *2^1
+                shl ax, cl                      ;
+                
+                mov bx, ax
+                pop dx
+                pop cx
+
+                ret
+                endp
+;------------------------------------------------

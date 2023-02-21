@@ -1,5 +1,3 @@
-INCLUDE FUNCS.ASM
-
 ;------------------------------------------------
 ;Write line from cmd arg
 ;------------------------------------------------
@@ -50,7 +48,3 @@ Write_line      proc
                 ret
                 endp
 ;------------------------------------------------
-
-
-;write lline give ptr to line and print it anywhere
-;
