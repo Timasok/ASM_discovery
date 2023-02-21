@@ -18,15 +18,28 @@ INCLUDE WRITE.ASM
 ; INCLUDE DRAW.ASM
 
 Main:
+                push bp
+                mov bp, si
+
                 SET_VID_PTR
                 SET_CMD_ARG
 
-                mov dx, 220ch
+                call My_Atoi                    ; get x coordinate from cmd line, and shift si
+                push ax                         ; x coordinate set, 
+
+                call My_Atoi                    ; get y coordinate from cmd line, and shift si
+                push ax                         ; save y coordinate
+
+                call Encode_cords               ; as a result we have coords in dx
+
+                pop ax                          ; clear stack
+                pop ax
+
+                ; mov dx, 220ch
                 call Get_Vid_Mem
 
-                ; mov ax, 0720h                  ; space, clear screen  
-                ; call ClrScr
                 call Write_line
 
+                pop bp
                 EXIT
 end             Start

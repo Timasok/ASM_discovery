@@ -4,14 +4,11 @@
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
 ;Exit:      ES = 0b800h
-;           SI = 00080h
-;Expects:   Nothing
+;Expects:   SI is set
 ;Destroys:  AX, BX, CX, SI
 ;------------------------------------------------
 Write_line      proc
-
-                mov si, 0080h                      ; write line address
-                
+               
                 cmp dx, 0000h 
                 jne @@Set_Data_Shift
 

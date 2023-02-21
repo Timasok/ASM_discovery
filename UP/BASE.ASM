@@ -31,6 +31,27 @@ SET_VID_PTR     macro
                 endm
 ;------------------------------------------------
 
+;------------------------------------------------
+;Get video mem address according to cordinates
+;------------------------------------------------
+;Entry:     p2 - x0 coordinate
+;           p1 - y0 coordinate
+;Exit:      DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Expects:   
+;Destroys:  DX, BP
+;------------------------------------------------
+Encode_cords    proc
+                push bp             ; func's prolog
+                mov bp, sp
+
+                mov dh, [bp+6]      ; save x - coord
+                mov dl, [bp+4]      ; save y - coord
+
+                pop bp
+                ret
+                endp
+;-------------------------------
 
 ;------------------------------------------------
 ;Get video mem address according to cordinates

@@ -1,6 +1,24 @@
-@tasm /la task_1.asm
-@tlink /t task_1.obj
+@Set filename=task_1
+@Set input=34 12 HELLO, World!
+@Set execute=%filename%.com %input%
+
+@tasm /la %filename%.asm
+@tlink /t %filename%.obj
 @cls
-task_1.com HELLO, World!
-PAUSE
-CLEAN.BAT
+%execute%
+@echo Open debugger?
+
+@CHOICE
+@if ERRORLEVEL == 2 goto clear
+@echo
+:debug
+td %execute%
+
+@goto finish
+
+:clear
+
+@CLEAR.BAT
+
+:finish
+@exit
