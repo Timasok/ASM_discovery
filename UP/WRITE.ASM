@@ -2,20 +2,26 @@
 ;Checks for \n 
 ;------------------------------------------------
 ;Entry:     AL - symbol
+;           DX - initial coordinates
 ;           BX - current video memory shift
 ;Exit:      flag changes
 ;Expects:   AH = 0
 ;Destroys:  AH
 ;------------------------------------------------
 Check_NL        proc
-                mov ah, 26h           ; ah = '&'
+                mov ah, 26h            ; ah = '&'
                 cmp al, ah
                 je @@Print_NL
 
-                xor ah, ah            ; if(c != '&') ah = 0        
+                xor ah, ah             ; if(c != '&') ah = 0        
                 jmp @@Finish
 
-@@Print_NL:     add bx, 80d*2           ; bx += screen_width
+@@Print_NL:     push ax
+                
+                add dx, 0001h           ; y+=1
+                call Get_Vid_Mem
+
+                pop ax
 
 @@Finish:
                 ret

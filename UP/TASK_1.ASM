@@ -1,8 +1,8 @@
 ;################################################
 ; task 1 was
-;   -to read line from cmd and display it in the center of the screen
-;   *create analogy to '\n'
-;   *add posibility to enter line in given coordinates on the screen
+;   -to read line from cmd and display it in the center of the screen           +
+;   *create analogy to '\n' - '&'                                               +                                                 
+;   *add posibility to enter line in given coordinates on the screen            +
 ;################################################
 
 .model tiny
@@ -34,9 +34,6 @@ Main:
 
                 pop ax                          ; clear stack
                 pop ax
-
-                ; mov dx, 220ch
-                call Get_Vid_Mem
 
                 call Write_line
 

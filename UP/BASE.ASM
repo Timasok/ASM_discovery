@@ -32,7 +32,7 @@ SET_VID_PTR     macro
 ;------------------------------------------------
 
 ;------------------------------------------------
-;Get video mem address according to cordinates
+;Write coordinates in dx
 ;------------------------------------------------
 ;Entry:     p2 - x0 coordinate
 ;           p1 - y0 coordinate
@@ -61,7 +61,7 @@ Encode_cords    proc
 ;Exit:      BX - address in RAM
 ;Expects:   
 ;           Screen size is 25/80
-;Destroys:  AX
+;Destroys:  AX, BX
 ;------------------------------------------------
 Get_Vid_Mem     proc
 
