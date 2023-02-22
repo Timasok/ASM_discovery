@@ -1,9 +1,34 @@
 ;------------------------------------------------
+;Checks for \n 
+;------------------------------------------------
+;Entry:     AL - symbol
+;           BX - current video memory shift
+;Exit:      flag changes
+;Expects:   AH = 0
+;Destroys:  AH
+;------------------------------------------------
+Check_NL        proc
+                mov ah, 26h           ; ah = '&'
+                cmp al, ah
+                je @@Print_NL
+
+                xor ah, ah            ; if(c != '&') ah = 0        
+                jmp @@Finish
+
+@@Print_NL:     add bx, 80d*2           ; bx += screen_width
+
+@@Finish:
+                ret
+                endp
+;------------------------------------------------
+
+
+;------------------------------------------------
 ;Write line from cmd arg
 ;------------------------------------------------
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
-;Exit:      ES = 0b800h
+;Exit:      CX - 
 ;Expects:   SI is set
 ;Destroys:  AX, BX, CX, SI
 ;------------------------------------------------
@@ -34,12 +59,17 @@ Write_line      proc
 @@Write_name: 
                 lodsb                               ; al = [si++]
                 
+                xor ah, ah
+                call Check_NL
+                cmp ah, 0
+                jne @@Loop
+
                 mov ah, 00001111b                   ; set white color - default
 
                 mov word ptr es:[bx], ax
                 add bx, 2
 
-                loop @@Write_name
+@@Loop:         loop @@Write_name
 
 @@Finish:     
                 ret

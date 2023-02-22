@@ -1,5 +1,5 @@
 @Set filename=task_1
-@Set input=34 12 HELLO, World!
+@Set input=34 12 HELLO&, World!
 @Set execute=%filename%.com %input%
 
 @tasm /la %filename%.asm
