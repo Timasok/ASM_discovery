@@ -17,6 +17,8 @@ INCLUDE READ.ASM
 INCLUDE WRITE.ASM
 ; INCLUDE DRAW.ASM
 
+str1          db 0ffh, ' HELLO_BRUH!', 00dh    ; string for further print(should contain max length, ' ', 0dh)
+
 Main:
                 push bp
                 mov bp, si
@@ -32,11 +34,11 @@ Main:
 
                 call Encode_cords               ; as a result we have coords in dx
 
-                pop ax                          ; clear stack
-                pop ax
+                ; call Write_line
 
-                call Write_line
-
+                push offset str1
+                call Write_string
+                
                 pop bp
                 EXIT
 end             Start

@@ -151,3 +151,51 @@ Write_dec       proc
                 endp
 ;------------------------------------------------
 
+;------------------------------------------------
+;Print number from cmd args in different numeral systems
+;------------------------------------------------
+;Entry:     DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Exit:      None
+;Expects:   ES = 0b800h
+;           DRAW, READ, WRITE modules should be included
+;           Cmd line has 2 arguments!(add assert maybe)
+;Destroys:  AX, BX, CX, DX
+;------------------------------------------------
+Print_num       proc                
+                
+                push dx                         ; save coordinates
+
+                call My_Atoi
+
+                pop dx
+                push dx
+
+                add dx, 0501h                   ; shift dec number start
+                call Write_dec  
+
+                pop dx
+                push dx
+
+                add dx, 0502h                   ; shift dec number start
+                call Write_hex
+
+                pop dx
+                push dx
+
+                add dx, 0503h                   ; shift dec number start
+                call Write_bin
+
+                xor cx, cx
+;=======================krgbiRGB
+                mov bh, 00001100b               ; set frame color
+                mov ah, 22d                     ; frame width
+                mov al, 5d                      ; frame height
+
+                pop dx                  
+
+                call drawFrame
+
+                ret
+                endp
+;------------------------------------------------

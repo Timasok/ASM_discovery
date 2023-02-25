@@ -28,13 +28,39 @@ Check_NL        proc
                 endp
 ;------------------------------------------------
 
+;------------------------------------------------
+;Write string from cmd arg
+;------------------------------------------------
+;Entry:     p1 - pointer to db with string
+;           DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;Exit:      
+;Expects:   db should start with special symbol -
+; with code of ffh to save the opportunity to write lines with length up to 255 symbols
+;Destroys:  AX, BX, CX
+;------------------------------------------------
+Write_string        proc
+                    push bp
+                    mov bp, sp
+                    
+                    push si
+                    mov si, [bp+4]
+
+                    call Write_line
+                    pop si
+
+                    pop bp
+                    retn 2
+                    endp
+;------------------------------------------------
+
 
 ;------------------------------------------------
 ;Write line from cmd arg
 ;------------------------------------------------
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
-;Exit:      CX - 
+;Exit:      
 ;Expects:   SI is set
 ;Destroys:  AX, BX, CX, SI
 ;------------------------------------------------
@@ -43,7 +69,7 @@ Write_line      proc
                 cmp dx, 0000h 
                 jne @@Set_Data_Shift
 
-                mov bx, 80*25+40
+                mov bx, 80*25+40                    ;set default coords - center of the screen
 
                 jmp @@End_Data_Shift
 
@@ -62,9 +88,12 @@ Write_line      proc
                 cmp al, 20h                         ; if (line[0] != ' ') {return;}
                 jne @@Finish
 
-@@Write_name: 
+@@Write_main_part: 
                 lodsb                               ; al = [si++]
                 
+                cmp al, 0dh                         ; if (line[0] == 13) {return;}
+                je @@Finish
+
                 xor ah, ah
                 call Check_NL
                 cmp ah, 0
@@ -75,7 +104,7 @@ Write_line      proc
                 mov word ptr es:[bx], ax
                 add bx, 2
 
-@@Loop:         loop @@Write_name
+@@Loop:         loop @@Write_main_part
 
 @@Finish:     
                 ret

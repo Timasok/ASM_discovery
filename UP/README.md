@@ -9,4 +9,4 @@ Here what functions contain in different files
 
     CLEAR.BAT - number of comands to remove not ASM file after compilation
 
-    TASK_i.ASM, TASK_i.BAT DEF_i.ASM - files related exactly to the task
+    TASK_i.ASM, TASK_i.BAT DEF_i.ASM - files related exactly to the i-th task

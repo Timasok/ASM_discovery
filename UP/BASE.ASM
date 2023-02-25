@@ -49,7 +49,7 @@ Encode_cords    proc
                 mov dl, [bp+4]      ; save y - coord
 
                 pop bp
-                ret
+                retn 4
                 endp
 ;-------------------------------
 
