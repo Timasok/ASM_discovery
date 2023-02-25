@@ -105,6 +105,57 @@ My_Atoi         proc
 ;------------------------------------------------
 
 ;------------------------------------------------
+;Form arithm results from 2 cmd args
+;------------------------------------------------
+;Entry:     
+;Exit:      None
+;Expects:   None                    
+;           write line address(only decimal numbers) and push them to stack
+;Destroys:  SI
+;------------------------------------------------
+Form_args       proc
+                
+                mov si, sp                      ; si = sp
+                mov dx, [si]                    ; dx = retaddr
+                sub sp, 4                       ; get additional space for 2 parameters
+
+                mov si, sp                      ; si = sp
+                mov word ptr [si], dx
+
+                push bp
+                mov bp, sp
+
+                mov bx, [bp+10]                 ; get first  operand
+                mov cx, [bp+8]                  ; get second opearand
+
+                mov ax, bx
+                add ax, cx                      ; ax = op1 + op2
+
+                mov word ptr [bp+10], ax
+
+                mov ax, bx
+                sub ax, cx                      ; ax = op1 - op2
+
+                mov word ptr [bp+8], ax
+
+                mov ax, bx
+                mul cx                          ; ax = op1 * op2
+
+                mov word ptr [bp+6], ax
+
+                xor dx, dx
+                mov ax, bx
+                div cx                          ; ax = op1 / op2
+
+                mov word ptr [bp+4], ax
+
+                pop bp
+                
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
 ;Read N arguments from cmd line
 ;------------------------------------------------
 ;Entry:     CX = number of arguments

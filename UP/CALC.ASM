@@ -154,7 +154,8 @@ Write_dec       proc
 ;------------------------------------------------
 ;Print number from cmd args in different numeral systems
 ;------------------------------------------------
-;Entry:     DH - x0 coordinate(0-80)
+;Entry:     AX - number
+;           DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
 ;Exit:      None
 ;Expects:   ES = 0b800h
@@ -162,28 +163,39 @@ Write_dec       proc
 ;           Cmd line has 2 arguments!(add assert maybe)
 ;Destroys:  AX, BX, CX, DX
 ;------------------------------------------------
+Decimal         db 0ffh, ' Dec', 00dh     ;
+Hex             db 0ffh, ' Hex', 00dh     ;
+Bin             db 0ffh, ' Bin', 00dh     ;
+
 Print_num       proc                
-                
-                push dx                         ; save coordinates
 
-                call My_Atoi
-
-                pop dx
                 push dx
 
-                add dx, 0501h                   ; shift dec number start
+                add dx, 0101h                   ; shift dec string start
+                push offset Decimal
+                call Write_string
+
+                add dx, 0400h                   ; shift dec number start
                 call Write_dec  
 
                 pop dx
                 push dx
 
-                add dx, 0502h                   ; shift dec number start
+                add dx, 0102h                   ; shift hex string start
+                push offset Hex
+                call Write_string
+
+                add dx, 0400h                   ; shift hex number start
                 call Write_hex
 
                 pop dx
                 push dx
 
-                add dx, 0503h                   ; shift dec number start
+                add dx, 0103h                   ; shift bin string start
+                push offset Bin
+                call Write_string
+
+                add dx, 0400h                   ; shift bin number start
                 call Write_bin
 
                 xor cx, cx
@@ -198,4 +210,20 @@ Print_num       proc
 
                 ret
                 endp
+;------------------------------------------------
+
+
+;------------------------------------------------
+;Print arithm of two numbers in the center
+;------------------------------------------------
+;Entry:     
+;Exit:      None
+;Expects:   ES = 0b800h
+;           DRAW, READ, WRITE modules should be included
+;           Cmd line has 2 arguments!(add assert maybe)
+;Destroys:  AX, BX, CX, DX
+;------------------------------------------------
+
+
+
 ;------------------------------------------------

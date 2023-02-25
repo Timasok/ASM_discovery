@@ -1,3 +1,79 @@
+
+;------------------------------------------------
+;Pushes from following registers
+;------------------------------------------------
+;Entry:     None
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  None
+;------------------------------------------------
+PUSH_B_A_D      macro
+                nop
+                push bx
+                push ax
+                push dx
+                nop
+                endm
+;------------------------------------------------
+
+;Pop into following registers
+;------------------------------------------------
+;Entry:     None
+;Exit:      (Not defined)
+;Expects:   Nothing
+;Destroys:  None
+;------------------------------------------------
+POP_D_A_B       macro
+                nop
+                pop dx
+                pop ax
+                pop bx
+                nop
+                endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Glues following parameteres coordinates
+;------------------------------------------------
+;Entry:     None
+;Exit:      dx = coords in format
+;Expects:   Nothing
+;Destroys:  BX, DX
+;------------------------------------------------
+GLUE_P15_P14    macro
+                nop
+                mov dx, [bp+32]                 ; add p15 x0
+
+                xchg dh, dl
+                mov bx, [bp+30]                 ; add p14 y0
+
+                add dx, bx                      ; p5.inner_func throw left top coordinates
+                nop
+                endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Sets color masks(only in frame func)
+;------------------------------------------------
+;Entry:     None
+;Exit:      dh - bordermask, bh - backgrmask
+;Expects:   Nothing
+;Destroys:  BX, DX, CX
+;------------------------------------------------
+GET_COLOR_P11   macro
+                nop
+                xor bx, bx
+                xor cx, cx
+                mov cl, 8                       ; shift
+                
+                mov dx, [bp+24]                 ; set color masks: dh - bordermask               
+                mov bh, dh                      ; set color masks: bh - backgrmask
+                shl dx, cl
+                nop
+                endm
+;------------------------------------------------
+
+
 ;------------------------------------------------
 ;Clear the screen
 ;------------------------------------------------

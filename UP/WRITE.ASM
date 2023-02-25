@@ -37,7 +37,7 @@ Check_NL        proc
 ;Exit:      
 ;Expects:   db should start with special symbol -
 ; with code of ffh to save the opportunity to write lines with length up to 255 symbols
-;Destroys:  AX, BX, CX
+;Destroys:  BX, CX
 ;------------------------------------------------
 Write_string        proc
                     push bp
@@ -46,7 +46,10 @@ Write_string        proc
                     push si
                     mov si, [bp+4]
 
+                    push ax
                     call Write_line
+                    pop ax
+                    
                     pop si
 
                     pop bp

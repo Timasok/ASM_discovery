@@ -24,17 +24,12 @@ Main:
                 mov bp, si
 
                 SET_VID_PTR
-                SET_CMD_ARG
 
-                call My_Atoi                    ; get x coordinate from cmd line, and shift si
-                push ax                         ; x coordinate set, 
-
-                call My_Atoi                    ; get y coordinate from cmd line, and shift si
-                push ax                         ; save y coordinate
-
+                mov cx, 2d                      ; set number of arguments that next function is going to use
+                call Read_args
                 call Encode_cords               ; as a result we have coords in dx
 
-                ; call Write_line
+                call Write_line
 
                 push offset str1
                 call Write_string

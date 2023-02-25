@@ -15,18 +15,21 @@ Start:          jmp Main                        ; write video mem address beginn
 INCLUDE BASE.ASM
 INCLUDE READ.ASM
 INCLUDE WRITE.ASM
-; INCLUDE DRAW.ASM
-; INCLUDE CALC.ASM
+INCLUDE CALC.ASM
+INCLUDE DRAW.ASM
 
 Main:
                 push bp
                 mov bp, sp
 
+                SET_VID_PTR
+
                 mov cx, 2d                      ; set number of arguments that next function is going to use
                 call Read_args
-                call Encode_cords
-
-                call Write_string
+                call Form_args
+                
+                ; call Encode_cords
+                ; call Print_num
 
                 pop bp
                 EXIT
