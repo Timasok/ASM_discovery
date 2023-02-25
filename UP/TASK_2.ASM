@@ -26,10 +26,9 @@ Main:
 
                 mov cx, 2d                      ; set number of arguments that next function is going to use
                 call Read_args
-                call Form_args
+                call Form_arithm
                 
-                ; call Encode_cords
-                ; call Print_num
+                call Print_arithm
 
                 pop bp
                 EXIT
