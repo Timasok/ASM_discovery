@@ -6,6 +6,7 @@ Here what functions contain in different files
     CALC.ASM  - funcs that translate numbers from one number system to another, make operations with them
     WRITE.ASM - funcs that write messages at the screen
     BASE.ASM  - some basic macro's and funcs
+    STRING.ASM- contains basic string functions
 
     CLEAR.BAT - number of comands to remove not ASM file after compilation
 

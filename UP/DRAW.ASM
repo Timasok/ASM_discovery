@@ -463,6 +463,7 @@ Draw_stripe     proc
 Draw_frame      proc
                 push bp
                 mov bp, sp
+                push si                         ; save si
 
                 mov bx, [bp+22]                 ; get frame style - p10
 
@@ -578,6 +579,7 @@ Draw_frame      proc
                 pop ax
 
 @@Finish:
+                pop si
                 pop bp
                 ret
                 endp
