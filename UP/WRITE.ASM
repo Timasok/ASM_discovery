@@ -57,7 +57,6 @@ Write_string        proc
                     endp
 ;------------------------------------------------
 
-
 ;------------------------------------------------
 ;Write line from cmd arg
 ;------------------------------------------------
@@ -78,7 +77,7 @@ Write_line      proc
 
 @@Set_Data_Shift:
 
-                call    Get_Vid_Mem                 ; set window size
+                call Get_Vid_Mem                    ; set window size
  
 @@End_Data_Shift:
 
@@ -96,14 +95,28 @@ Write_line      proc
                 
                 cmp al, 0dh                         ; if (line[0] == 13) {return;}
                 je @@Finish
-
+                cmp al, NULL
+                je @@Finish
+                
                 xor ah, ah
                 call Check_NL
                 cmp ah, 0
                 jne @@Loop
 
+;===============                                    ; sleep 
+                push cx
+                push dx
+                push ax
+                mov cx, 0001h
+                mov dx, 0FFFFh
+                mov ah, 86h
+                int 15h
+                pop ax
+                pop dx
+                pop cx
+;===============
+                
                 mov ah, 00001111b                   ; set white color - default
-
                 mov word ptr es:[bx], ax
                 add bx, 2
 

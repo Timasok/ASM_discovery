@@ -105,16 +105,18 @@ ClrScr          proc
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  BX
+;Destroys:  BX, DI
 ;------------------------------------------------
 DispSym         proc
                 push ax                         ; save symbol
 
-                call Get_Vid_Mem
+                call Get_Vid_Mem                ;//TODO macro
 
                 pop ax                          ; revive symbol
 
                 mov word ptr es:[bx], ax
+                ; mov di, bx
+                ; stosw
 
                 ret
                 endp
@@ -252,7 +254,6 @@ DrawLine        proc
 ;Destroys:  CX, 
 ;------------------------------------------------
 DrawFrame       proc
-
 @@Main_part:
                 PUSH_B_A_D
 
@@ -455,12 +456,13 @@ Draw_stripe     proc
 ;           p3  - right  top     symbol
 ;           p2  - middle top     symbol
 ;           p1  - left   top     symbol
-;Exit:      None
+;Exit:      DI  - start of the frame
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
 ;Destroys:  
 ;------------------------------------------------
-Draw_frame      proc
+Draw_frame      proc 
+                        ;//TODO add parameters
                 push bp
                 mov bp, sp
                 push si                         ; save si
@@ -481,6 +483,7 @@ Draw_frame      proc
 ;======================================== draw upper part
 
                 GLUE_P15_P14
+                mov di, dx                      ; save initial coordinates
                 push dx
 
                 GET_COLOR_P11
@@ -525,17 +528,10 @@ Draw_frame      proc
 @@Skip:         
 ;################################################       
  
-                ; mov cx, [bp+26]                 ; p12.input get height
-                ; sub cx, 2                       ; get max cx
-
-                mov cx, 3
+                mov cx, [bp+26]                 ; p12.input get height   ;
+                sub cx, 2                       ; get max cx             ;
 @@Next:         
-                ; mov ax, [bp+26]               ; ax = height-2 (max counter value)
-                ; sub ax, 2
-                ; sub ax, cx                    ; count shift(ax = cxMax-cx)
-
                 mov dx,[si+8]                   ; get last dx value
-                ; add dx, ax                    ; change dx 
                 inc dx                          ; rekkurent function    
 
                 mov word ptr [si+8], dx         ; p5.inner_func set left coords symbol

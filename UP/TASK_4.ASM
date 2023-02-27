@@ -9,7 +9,6 @@ locals @@
 Start:          jmp Main                        ; write video mem address beginning
 
 INCLUDE BASE.ASM
-INCLUDE DEF_STR.ASM
 INCLUDE STRING.ASM
 
 S2           db 'Hello World!$'                  ; lhs

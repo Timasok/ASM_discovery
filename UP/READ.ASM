@@ -51,22 +51,61 @@ SET_CMD_ARG     macro
 ;------------------------------------------------
 
 ;------------------------------------------------
-;Get center coordinates
+;Get width and height according to string
 ;------------------------------------------------
-;Entry:     cmd args
-;Exit:      DH - x0 coordinate(0-80)(for writing)
-;           DL - y0 coordinate(0-25)
+;Entry:     cmd arg with line
+;Exit:      AX - optimal width
+;           BX - optimal height
 ;Expects:   SI is set
-;Destroys:
+;           STRING MODULE ADDED!
+;Destroys:  AX, BX, CX, DX, DI
 ;------------------------------------------------
-Get_center      proc
+Get_str_params  proc
+                push si
+                              
+                ; inc si                ; inc si if needed                 
 
-                lodsb
+                mov dx, '&'
+                mov ax, 1h              ; set initial height of the line
+                mov bx, 1h              ; set initial width(maximum width)
+@@Next:         
+                mov di, si              ; di = line start
 
-@@Next:
+                push cx
+                push bx
+                push ax
 
+                push si
+                xor bx, bx
+                call Check_NULL
+                cmp bx, 1
+                je @@End                ; if reached '\0' finish
 
+                push si                 ; push current si
+                push dx                 ; push '\n'
+                call strchr
 
+                pop ax
+                pop bx
+                pop cx
+
+                cmp si, 0h              ; if( no ch == '\n') break;
+                je @@End
+                
+                inc ax                  ; inc height
+                mov cx, si
+                sub cx, di              ; cx = current length
+
+                cmp cx, bx              ; if(cur_len>max_len)
+                ja @@Change_width       ;   max_len = cur_len;
+                jmp @@Next
+
+@@Change_width: mov bx, cx
+                jmp @@Next
+
+@@End:          add ax, 2               ; add border thickness to width and height
+                add bx, 2
+                pop si
                 ret
                 endp
 ;------------------------------------------------

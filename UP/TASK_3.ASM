@@ -5,6 +5,7 @@
 ;   *give ability to write text in the frame
 ;   *make automatic centration of the frame
 ;   *make frame move and zoom
+; change color in string+hex 
 
 .model tiny
 .code
@@ -14,8 +15,9 @@ locals @@
 Start:          jmp Main                        ; write video mem address beginning
 
 INCLUDE BASE.ASM
-INCLUDE READ.ASM
+INCLUDE STRING.ASM
 INCLUDE WRITE.ASM
+INCLUDE READ.ASM
 INCLUDE CALC.ASM
 INCLUDE DRAW.ASM
 
@@ -27,11 +29,19 @@ Main:
                 mov ax, 0720h                   ; space, clear screen  
                 call ClrScr
                 
-                mov cx, 15d                    ; push 15 parameters from cmd line
+                mov cx, 15d                     ; push 15 parameters from cmd line
                 call Read_args
 
                 call Draw_frame
 
+                ; push di
+
+                ; call Get_str_params
+
+                ; pop di
+
+                mov dx, di
+                add dx, 0202h                   ; set frame shift
                 call Write_line
 
                 pop bp
