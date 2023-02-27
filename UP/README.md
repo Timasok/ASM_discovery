@@ -7,6 +7,7 @@ Here what functions contain in different files
     WRITE.ASM - funcs that write messages at the screen
     BASE.ASM  - some basic macro's and funcs
     STRING.ASM- contains basic string functions
+    DEF_STR.ASM- define of special symbols like '\n', '\0' neccesary to work with stings and write!
 
     CLEAR.BAT - number of comands to remove not ASM file after compilation
 

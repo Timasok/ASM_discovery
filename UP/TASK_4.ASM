@@ -9,16 +9,22 @@ locals @@
 Start:          jmp Main                        ; write video mem address beginning
 
 INCLUDE BASE.ASM
+INCLUDE DEF_STR.ASM
 INCLUDE STRING.ASM
 
-S1          db 'HELLO WORLD!$'
-S2          db 'FUCK THE WORLD!$'
+S2           db 'Hello World!$'                  ; lhs
+S1           db 'H$'                             ; rhs
 
 Main:
 
-                lea si, S1
-                lea di, S2
-                call My_cmpsw
+                mov ax, offset S1
+                push ax
+
+                mov ax, offset S2
+                push ax
+
+                xor ax, ax
+                call strcmp
 
                 EXIT
 End             Start

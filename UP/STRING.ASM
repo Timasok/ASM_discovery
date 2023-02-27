@@ -10,6 +10,42 @@ CHECK_DF        macro
                 endm
 ;------------------------------------------------
 
+
+;------------------------------------------------
+;Checks for \0
+;------------------------------------------------
+;Entry:     p1 - ptr
+;Exit:      BX = 1 if == '\0' - changes
+;           else don't change BX
+;Expects:   
+;Destroys:  BX
+;------------------------------------------------
+Check_NULL      proc
+                push bp
+                mov bp, sp
+
+                push ax
+                push si
+                mov si, [bp+4]
+
+                mov al, [si]
+                cmp al, NULL
+                je @@Equal
+                jmp @@Not_equal
+
+@@Equal:        mov bx, 1h
+                jmp @@Finish
+
+@@Not_equal:    jmp @@Finish
+
+@@Finish:       pop si
+                pop ax
+
+                pop bp
+                retn 2
+                endp
+;------------------------------------------------
+
 ;------------------------------------------------
 ; lodsw - reads one word of the string written in SI
 ;------------------------------------------------
@@ -39,7 +75,7 @@ My_lodsw        proc
 ;Exit:      AL - 1 byte of the string
 ;           SI += 1
 ;Expects:   
-;Destroys:  SI, AX
+;Destroys:  SI, AL
 ;------------------------------------------------
 My_lodsb        proc
                 mov al, [si]
@@ -55,7 +91,7 @@ My_lodsb        proc
 ;------------------------------------------------
 
 ;------------------------------------------------
-; stosb
+; stosb - write given byte in the following address
 ;------------------------------------------------
 ;Entry:     AL - one char
 ;Exit:      None
@@ -75,9 +111,8 @@ My_stosb        proc
                 endp
 ;------------------------------------------------
 
-
 ;------------------------------------------------
-; stosw
+; stosw - write given word in the following address
 ;------------------------------------------------
 ;Entry:     AX - two chars
 ;Exit:      None
@@ -98,7 +133,7 @@ My_stosw        proc
 ;------------------------------------------------
 
 ;------------------------------------------------
-; cmpsb
+; cmpsb - compares bytes
 ;------------------------------------------------
 ;Entry:         
 ;Exit:      None
@@ -159,10 +194,12 @@ My_cmpsw        proc
 ;Entry:     DI, SI
 ;Exit:      None
 ;Expects:   
-;Destroys: DI, DI
+;Destroys: DI, SI
 ;------------------------------------------------
 My_movsb        proc
-                mov byte ptr es:[di], ds:[si]
+                push ax
+                mov al, [si]
+                mov byte ptr es:[di], al
 
                 CHECK_DF
                 
@@ -174,23 +211,24 @@ My_movsb        proc
 @@Inc:          inc si
                 inc di
 
-@@End:          ret
-                endp
-
+@@End:          
+                pop ax
                 ret
                 endp
 ;------------------------------------------------
 
 ;------------------------------------------------
-; movsw - moves byte from es:di to ds:si 
+; movsw - moves word from es:di to ds:si 
 ;------------------------------------------------
 ;Entry:     DI, SI
 ;Exit:      None
 ;Expects:   
-;Destroys:  DI, DI
+;Destroys:  DI, SI
 ;------------------------------------------------
 My_movsw        proc
-                mov word ptr es:[di], ds:[si]
+                push ax
+                mov ax, [si]
+                mov word ptr es:[di], ax
 
                 CHECK_DF
                 
@@ -202,20 +240,373 @@ My_movsw        proc
 @@Inc:          add si, 2
                 add di, 2
 
-@@End:          ret
+@@End:          pop ax
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+; strlen - counts number of symbols until termination symbol
+;------------------------------------------------
+;Entry:     p1 - ptr to string in mem    
+;Exit:      BX - string length 
+;Expects:   
+;Destroys:  AX, BX
+;------------------------------------------------
+strlen          proc
+                push bp
+                mov bp, sp
+                
+                push si
+                mov si, [bp+4]
+                mov ah, NULL                 ; set termination symbol
+                
+                xor bx, bx                  ; bx = 0
+
+@@Next:         lodsb
+                inc bx
+                cmp al, ah
+                jne @@Next
+                dec bx
+                pop si
+
+                pop bp
+                retn 2
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+; memset
+;------------------------------------------------
+;Entry:     p3 - void* dest
+;           p2 - int ch
+;           p1 - size_t count
+;Exit:      DI - void *dest
+;Expects:   
+;Destroys:  ES, DI, AL, CX
+;------------------------------------------------
+memset          proc
+                push bp
+                mov bp, sp
+
+                push ds
+                pop es
+
+                mov cx, [bp+4]              ; cx = count
+                mov al, [bp+6]              ; al = ch
+                mov di, [bp+8]              ; di = dest
+
+@@Next:         stosb
+                loop @@Next
+
+                mov di, [bp+8]              ; di = dest
+                
+                pop bp
+                retn 6
                 endp
 ;------------------------------------------------
 
 
-; strlen
-; memset
-; memchr
-; strchr
-; strcpy
-; strncpy
-; memcpy
+;------------------------------------------------
+; memchr - find char in given arr
+;------------------------------------------------
+;Entry:     p3 - void* dest
+;           p2 - int ch
+;           p1 - size_t count
+;Exit:      SI - void* of given char
+;Expects:   
+;Destroys:  AX, CX, SI
+;------------------------------------------------
+memchr          proc
+                push bp
+                mov bp, sp
+
+                mov cx, [bp+4]              ; cx = count
+                mov ah, [bp+6]              ; ah = ch
+                mov si, [bp+8]              ; di = dest
+
+@@Next:         lodsb
+                cmp ah, al
+                je @@End
+
+                loop @@Next
+                mov si, 0h
+
+@@End:          dec si
+                pop bp
+                retn 6
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+; strchr - find char in given null terminated str
+;------------------------------------------------
+;Entry:     p2 - void* dest
+;           p1 - int ch
+;Exit:      SI - void* of given char
+;Expects:   DS - is set
+;Destroys:  AX, CX, BX, SI
+;------------------------------------------------
+strchr          proc
+                push bp
+                mov bp, sp
+
+                xor bx, bx                  ; use as transfer for si
+
+                mov cl, NULL                ; set null terminated byte
+
+                mov ah, [bp+4]              ; ah = ch
+                mov si, [bp+6]              ; di = dest
+
+@@Next:         lodsb
+                cmp al, cl                  ; if (line[i] == '\0')
+                je @@Line_end               ;        break;
+
+                cmp ah, al                  ; if (line[i] == ch)
+                je @@Finish                 ;        break;
+
+                jmp @@Next
+
+@@Line_end:     cmp ah, al                  ; if (ch != '\0')
+                jne @@End                   ;       res == null
+
+@@Finish:       mov bx, si
+                dec bx
+
+@@End:          mov si, bx
+                pop bp
+                retn 4
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+; memcpy - writes p1 symbols
+;------------------------------------------------
+;Entry:     p3  - dest ptr
+;           p2  - src  ptr
+;           p1  - max number of characters
+;Exit:      None
+;Expects:   
+;Destroys:  SI, ES, DI, CX
+;------------------------------------------------
+memcpy          proc
+                push bp
+                mov bp, sp
+                
+                push ds
+                pop es
+
+                mov di, [bp+8]                  ; set dest ptr
+                mov si, [bp+6]                  ; set src  ptr
+
+                mov cx, [bp+4]                  ; set cx
+
+                rep movsb 
+
+                pop bp
+                retn 6
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+; strcpy - writes strlen+1 of src to dest
+;------------------------------------------------
+;Entry:     p2  - dest ptr
+;           p1  - src  ptr
+;Exit:      None
+;Expects:   
+;Destroys:  SI, ES, DI, CX, BX
+;------------------------------------------------
+strcpy          proc
+                push bp
+                mov bp, sp
+                
+                push ds
+                pop es
+
+                mov di, [bp+6]                  ; set dest ptr
+                mov si, [bp+4]                  ; set src  ptr
+
+                push si
+                call strlen
+                mov cx, bx
+                inc cx                          ; count src length
+
+                rep movsb 
+
+                pop bp
+                retn 4
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+; strncpy - like memcpy, but 
+;------------------------------------------------
+;Entry:     p3  - dest ptr
+;           p2  - src  ptr
+;           p1  - max number of characters
+;Exit:      None
+;Expects:   
+;Destroys:  SI, ES, DI, CX
+;------------------------------------------------
+strncpy         proc
+                push bp
+                mov bp, sp
+                
+                push ds
+                pop es
+
+                mov di, [bp+8]                  ; set dest ptr
+                mov si, [bp+6]                  ; set src  ptr
+
+                mov cx, [bp+4]                  ; set cx
+
+                push si
+                call strlen
+                inc bx                          ; bx = strlen+1
+
+                cmp cx, bx
+                ja @@Draw_at_the_end
+                jmp @@Normal
+
+@@Draw_at_the_end:
+                push cx
+                push bx
+
+                mov cx, bx                      ; write main part
+                rep movsb
+
+                pop bx
+                pop cx
+
+                sub cx, bx                      
+                push di                         ; dest
+                mov bx, NULL                    
+                push bx                         ; symbol
+                push cx                         ; count
+                call memset                     ; write nulls
+                
+                jmp @@Finish                
+
+@@Normal:       rep movsb 
+
+@@Finish:       pop bp
+                retn 6
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
 ; memcmp
+;------------------------------------------------
+;Entry:     p3  - lhs second object to compare
+;           p2  - rhs first object to compare
+;           p1  - count number of bytes to examine
+;Exit:      AX  - signed value that stands for cmp result
+;Expects:   
+;Destroys: 
+;------------------------------------------------
+memcmp          proc
+                push bp
+                mov bp, sp
+
+                push ds
+                pop es
+
+                mov si, [bp+8]                  ; lhs set dest ptr
+                mov di, [bp+6]                  ; src set src  ptr
+                mov cx, [bp+4]
+
+                repe cmpsb 
+                lahf                            ; save flags to ax
+
+                cmp cx, 0
+                je @@Zero
+
+                and ax, 0000000010000000b       ; get 7th byte aka ZF
+                cmp ax, 0
+                je @@Positive
+                jmp @@Negative                  ; get flags and get the value
+
+@@Positive:     mov ax, 1h
+                jmp @@End
+
+@@Negative:     mov ax, 0FFFFh
+                jmp @@End
+
+@@Zero:         mov ax, 0
+                jmp @@End
+
+@@End:          pop bp
+                retn 6
+                endp
+;------------------------------------------------
+
+
+;------------------------------------------------
 ; strcmp
+;------------------------------------------------
+;Entry:     p2  - lhs second object to compare
+;           p1  - rhs first object to compare
+;Exit:      AX  - signed value that stands for cmp result
+;Expects:   
+;Destroys: 
+;------------------------------------------------
+strcmp          proc
+                push bp
+                mov bp, sp
+
+                push ds
+                pop es
+
+                mov si, [bp+6]                  ; lhs set dest ptr
+                mov di, [bp+4]                  ; src set src  ptr
+                ; mov cx, [bp+4]
+
+@@Next:
+                cmpsb 
+                lahf                            ; save flags to ax
+
+                xor bx, bx                      ; set bx = 0 to check for '\0' again
+
+                mov cx, si
+                dec cx
+                push cx
+                call Check_NULL                 ; check lhs for '\0'
+
+                mov cx, di
+                dec cx
+                push cx
+                call Check_NULL                 ; check rhs for '\0'
+
+                cmp bx, 0                       ; if (lhs[i]!= '\0' && rhs[i]!= '\0')
+                je @@Next
+
+                mov cl, 6                       
+                call Check_flags
+                cmp ch, 0h                      ; check ZF zero flag
+                
+                jne @@Zero
+
+                mov cl, 7                       
+                call Check_flags
+                cmp ch, 0h                      ; check SF sign flag
+
+                je @@Positive
+                jmp @@Negative                  ; get flags and get the value
+
+@@Positive:     mov ax, 1
+                jmp @@End
+
+@@Negative:     mov ax, 0FFFFh
+                jmp @@End
+
+@@Zero:         mov ax, 0
+                jmp @@End
+
+@@End:          pop bp
+                retn 4
+                endp
+;------------------------------------------------
 
 ;------------------------------------------------
 ;------------------------------------------------
@@ -226,6 +617,9 @@ My_movsw        proc
 ;------------------------------------------------
 ; My_        
 ;                 proc
+;                 push bp
+;                 mov bp, sp
+;                 pop bp
 ;                 ret
 ;                 endp
 ;------------------------------------------------

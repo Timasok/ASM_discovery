@@ -32,6 +32,33 @@ SET_VID_PTR     macro
 ;------------------------------------------------
 
 ;------------------------------------------------
+;Check flag
+;------------------------------------------------
+;Entry:     AX - all flags saved via command lahf
+;           CL - flag number 
+;Exit:      CH - flag status
+;Expects:   
+;Destroys:  CH
+;------------------------------------------------
+Check_flags     proc
+                push ax
+                push bx
+
+                mov bx, 1h
+                shl bx, cl                      ; get cl-th mask
+
+                and ax, bx                
+                shr ax, cl                      ; get in ah right value
+
+                mov ch, al                      ; save result
+
+                pop bx
+                pop ax
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
 ;Write coordinates in dx
 ;------------------------------------------------
 ;Entry:     p2 - x0 coordinate
@@ -52,6 +79,9 @@ Encode_cords    proc
                 retn 4
                 endp
 ;-------------------------------
+
+
+
 
 ;------------------------------------------------
 ;Get video mem address according to cordinates
