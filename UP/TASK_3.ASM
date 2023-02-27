@@ -5,8 +5,8 @@
 ;   *give ability to write text in the frame
 ;   *make automatic centration of the frame
 ;   *make frame move and zoom
-; change color in string+hex 
-
+; //TODO change color in string+hex 
+; //TODO set sleep
 .model tiny
 .code
 org 100h
