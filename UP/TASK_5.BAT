@@ -6,7 +6,7 @@
 @tlink /t %filename%.obj
 @cls
 %execute%
-@echo Open debugger?
+@REM @echo Open debugger?
 
 @REM @CHOICE
 @REM @if ERRORLEVEL == 2 goto clear
