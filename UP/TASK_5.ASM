@@ -15,7 +15,14 @@ Main:               mov bx, 0b800h
                     mov bx, 160d*5 + 80d    ; get vid mem - 5th line
 
 Next:               in al, 60h
-                    mov word ptr es:[bx], ax ;depict scan code
+                    mov es:[bx], ax         ;depict scan code
+
+                    add bx, 2               ; fill memory
+                    and bx, 4095d           ; memory stands for 4096 bytes
+
+                    xor cx, cx              ; 
+Delay:              dec cx
+                    loop Delay
 
                     cmp al, 1               ; if(scan == 'esc')break;
                     jne Next
