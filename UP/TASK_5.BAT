@@ -5,7 +5,7 @@
 @tasm /la %filename%.asm
 @tlink /t %filename%.obj
 @cls
-%execute%
+td %execute%
 @REM @echo Open debugger?
 
 @REM @CHOICE
