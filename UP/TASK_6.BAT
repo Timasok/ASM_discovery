@@ -1,5 +1,4 @@
-@Set filename=task_5
-@Set resident_one=res_1
+@Set filename=task_6
 @Set input=
 @Set execute=%filename%.com %input%
 
@@ -7,11 +6,6 @@
 @tlink /t %filename%.obj
 @cls
 %execute%
-
-@REM @tasm /la %resident_one%.asm
-@REM @tlink /t %resident_one%.obj
-@REM @cls
-@REM %resident_one%
 @REM @echo Open debugger?
 
 @REM @CHOICE

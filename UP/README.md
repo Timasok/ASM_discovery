@@ -8,6 +8,7 @@ Here what functions contain in different files
     BASE.ASM  - some basic macro's and funcs
     STRING.ASM- contains basic string functions
     DEF_STR.ASM- define of special symbols like '\n', '\0' neccesary to work with stings and write!
+    3_BUF.ASM - has funcs to print registers
 
     CLEAR.BAT - number of comands to remove not ASM file after compilation
 
