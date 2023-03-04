@@ -47,7 +47,7 @@ Old09Seg            dw 0
                     endp
 ;------------------------------------------------
 Main:                                                       ; TODO use this memory for buffer       
-                    push ax bx es
+                    push ax bx es si
 
                     push offset New09
                     push offset Old09Seg
@@ -56,14 +56,14 @@ Main:                                                       ; TODO use this memo
 
                     call Change_int                         ; change int table 9h in particular
 
-                    pop es bx ax
+                    pop si es bx ax
 
 Next:               in al, 60h                              ;TODO write menu
                     
                     cmp al, 1                               ; can == 'esc')break;
                     je h_key_esc
-                    ; cmp al, 2                               ; if(scan == 'esc')break;
-                    ; je h_key_print_reg
+                    cmp al, 2                               ; if(scan == 'esc')break;
+                    je h_key_print_reg
                     
                     jmp Next
 
@@ -73,12 +73,44 @@ h_key_esc:
                     jmp Finish
 
 h_key_print_reg:
+
+                    push bx cx dx
                     mov dx, 4005h                           ; print register
                     mov bx, 0b800h                          ; set vidmem
                     mov es, bx                              ; set vidmem
-                    call Write_hex                          ; mov ax
 
-                    jmp Finish
+                    call Write_hex                          
+
+                    mov ax, bx                              ; BX
+
+                    push bx cx dx
+                    mov dx, 4006h                           ; print register
+                    mov bx, 0b800h                          ; set vidmem
+                    mov es, bx                              ; set vidmem
+
+                    call Write_hex                          
+                    pop dx  bx cx
+
+                    mov ax, cx
+
+                    push bx cx dx
+                    mov dx, 4007h                           ; print register
+                    mov bx, 0b800h                          ; set vidmem
+                    mov es, bx                              ; set vidmem
+
+                    call Write_hex                          
+                    pop dx  bx cx
+
+                    mov ax, dx
+                    push bx cx dx
+                    mov dx, 4008h                           ; print register
+                    mov bx, 0b800h                          ; set vidmem
+                    mov es, bx                              ; set vidmem
+
+                    call Write_hex                          
+                    pop dx  bx cx
+
+                    jmp Next
 
 Finish:             mov ax, 3100h                           ; terminate and stay resident
                     mov dx, offset EOP                      ; save end of program
@@ -86,7 +118,7 @@ Finish:             mov ax, 3100h                           ; terminate and stay
                     inc dx
                     int 21h
 EOP:                                                        ; after EOP db for buffer
-                    jmp end
+                    jmp END_all
 
 ;------------------------------------------------
 ;change int table
@@ -97,7 +129,7 @@ EOP:                                                        ; after EOP db for b
 ;           AX - interuption number
 ;Exit:      Nothing
 ;Expects:   
-;Destroys:  AX, BX, ES
+;Destroys:  AX, BX, ES, SI
 ;------------------------------------------------
 Change_int          proc
                     push bp
@@ -111,15 +143,17 @@ Change_int          proc
                     mov bx, ax                              ; set bx
 
                     mov ax, es:[bx]                         
-                    mov [bp+4], ax                          ; save old int(relative)
+                    mov si, [bp+4]
+                    mov word ptr [si], ax                          ; save old int(relative)
 
                     mov ax, [bp+8]
                     mov word ptr es:[bx], ax                ; get new int(relative)
 
                     add bx, 2                               ; shift bx
                     
-                    mov ax, es:[bx]                         
-                    mov [bp+6], ax                          ; save old int(segment)
+                    mov ax, es:[bx]   
+                    mov si, [bp+6]                    
+                    mov word ptr [si], ax                          ; save old int(segment)
 
                     mov ax, cs
                     mov word ptr es:[bx], ax                ; get new int(segment)
@@ -129,6 +163,7 @@ Change_int          proc
                     retn 6
                     endp
 ;------------------------------------------------
+END_all:
 end                 Start
 
 
