@@ -1,5 +1,5 @@
 @Set filename=task_2
-@Set input=9 7
+@Set input=9 12
 @Set execute=%filename%.com %input%
 
 @tasm /la %filename%.asm

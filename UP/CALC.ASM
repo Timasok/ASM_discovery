@@ -48,16 +48,17 @@ Write_bin       proc
 ;           DL - y left top coordinate(0-25)
 ;Exit:      Nothing
 ;Expects:   ES = 0b800h
-;Destroys:  BX, CX, DX
+;Destroys:  
 ;------------------------------------------------
 Write_hex       proc
+
+                push bx cx dx
 
                 push ax                         ; revive cords values
                 call Get_Vid_Mem
                 pop ax
 
                 mov cx, 4                       ; set counter
-
 @@Next:         
                 push cx                         ; save counter
                 sub cx, 1
@@ -75,12 +76,19 @@ Write_hex       proc
                 shr dx, cl
                 and dx, 000Fh                   ; dx = number(current translated half-byte)
 
-                mov cx, offset Hex_val          ; save ptr to db
-                add cx, dx
+                cmp dx, 000ah 
+                jb @@Digit
+                jmp @@Symbol
 
-                mov si, cx
+@@Digit:        add dx, 48d
+                jmp @@Finish_him
+@@Symbol:
+                add dx, 55d
+                jmp @@Finish_him
 
-                mov ax, [si]                    ; save ascii code
+@@Finish_him:   
+                xor ax, ax
+                add ax, dx              
                 mov ah, 0ah                     ; set color
 
                 mov word ptr es:[bx], ax
@@ -92,10 +100,10 @@ Write_hex       proc
                 
                 xor bx, bx
 
-                ret
-                endp
+                pop dx cx bx
 
-Hex_val:        db "0123456789ABCDEF"                
+                ret 
+                endp
 ;------------------------------------------------
 
 ;------------------------------------------------

@@ -1,65 +1,56 @@
 
 
 ;------------------------------------------------
-;Handle hot key
+;push macro
 ;------------------------------------------------
 ;Entry:     AL - scan code
 ;Exit:      Nothing
 ;Expects:   
 ;Destroys:  
 ;------------------------------------------------
-;------------------------------------------------
+Reg_push            macro
+                    push bx cx dx
+                    mov dx, 4503h                           ; print register
+                    mov bx, 0b800h                          ; set vidmem
+                    mov es, bx                              ; set vidmem
 
+                    endm    
+;------------------------------------------------
 
 ;------------------------------------------------
 ;Print all registers
 ;------------------------------------------------
-;Entry:     
+;Entry:     AH - reg print mode
+;           AH - 0 print
+;           AH - 1 hide 
 ;Exit:      Nothing
 ;Expects:   
-;Destroys: 
+;Destroys: None
 ;------------------------------------------------
 Print_regs          proc
-                    push si ax                              ; save ax
+                    pushf
+                    push ax bx cx dx                             ; save ax
 
-                    push bx cx dx
-                    mov dx, 4005h                           ; print register
+                    cmp ah, 1
+                    je @@Finish
+
+                    push cs ss es ds es sp bp di si dx cx bx ax
+
+                    mov cx, 13d
+                    mov dx, 4503h                           ; set initial cordinates
+
                     mov bx, 0b800h                          ; set vidmem
                     mov es, bx                              ; set vidmem
 
-                    call Write_hex                          
-                    pop dx bx cx
+@@Next:         
+                    pop ax
+                    call Write_hex                         
+                    add dx, 0001h
 
-                    mov ax, bx                              ; BX
+                    loop @@Next
 
-                    push bx cx dx
-                    mov dx, 4006h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-                    pop dx bx cx
-
-                    mov ax, cx                              ; save cx value
-
-                    push bx cx dx
-                    mov dx, 4007h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-                    pop dx bx cx
-
-                    mov ax, dx
-                    push bx cx dx
-                    mov dx, 4008h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-                    pop dx bx cx
-
-                    pop ax si
+@@Finish:           pop dx cx bx ax
+                    popf
 
                     ret
                     endp

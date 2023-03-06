@@ -48,68 +48,44 @@ Old09Seg            dw 0
 ;------------------------------------------------
 
 ;------------------------------------------------
+; Handles 8th interuption 
+;------------------------------------------------
+;Entry:     AL - current scan code
+;Exit:      None
+;Expects:   
+;Destroys:
+;------------------------------------------------
 New08               proc
                     push ax bx cx dx es
 
-; 7-8 - chanel number that we are going tp read(00 - that stands for IRQ0 - 40h)
-; 5-4 - set counter value for 00(use for recriving info)
+                    cmp al, escape
+                    je @@Escape
 
-                    mov al, 001101b
-                    out 43h, al                             ; set mode 3
+                    jmp @@Print
 
-                    mov al, 00000001b
-                    out 40h, al                             ; set lower byte of counters initial value
+@@Reg_hide:         mov ah, 1h    
 
-                    mov al, 10000000b
-                    out 40h, al                             ; set upper byte of counters initial value
+@@Print:            call Print_regs
 
-                    xor ax, ax
-                                                            ;read timer value
-                    mov al, 0
-                    out 43h, al       
+@@Escape:           pop es dx cx bx ax
 
-                    in al, 40h                              ; get lower value
-                    mov cl, al
-                    in al, 40h                              ; get upper byte
-                    mov ch, al
-
-                    ; mov bx, 0b800h                          ; set vidmem
-                    ; mov es, bx                              ; set vidmem
-                    ; mov ah, 4eh                             ; set color(red)
-                    ; mov bx, 160d*6 + 80d                    ; get vid mem - 6th line
-                    ; mov es:[bx], cx
-
-                    ; push ax bx cx dx es
-                    ; mov ax, cx
-                    ; mov dx, 2507h
-                    ; call Write_hex
-                    ; pop es dx cx bx ax
-
-;                     xor cx, cx                    ; ded's delay method
-; @@Delay:            dec cx
-;                     loop @@Delay
-
-;                     cmp cx, 0F0Fh
-;                     je @@Yo                                    ;if al == cx_special
-;                     jmp @@Drop
-; @@Yo:
-;                     push ax bx cx dx es
-;                     call Print_regs
-;                     ; inc cx
-;                     pop es dx cx bx ax     
-@@Drop:             
-                    mov al, 20h                             ; send signal to 20 port INTC
-                    out 20h, al
-
-                    pop es dx cx bx ax
-
-                    db 0EAh                                 ; jmp comand
+;                     ; mov al, 20h                             ; send signal to 20 port INTC
+;                     ; out 20h, al
+                    db 0EAh                                     ; jmp comand
 Old08Ofs            dw 0
 Old08Seg            dw 0
 
                     ; iret
                     endp
 ; ------------------------------------------------
+
+escape      equ    1                                       ; esc symbol
+reg_show    equ    2                                       ; 1 symbol
+reg_hide    equ    3                                       ; 2 symbol
+clear       equ    4                                       ; 3 symbol
+stop        equ    5                                       ; 4 symbol
+
+Draw_buf        db 4000 dup (?) 
 
 Main:                                                       ; TODO use this memory for buffer       
                     push ax bx es si                        ; use macro
@@ -135,13 +111,8 @@ Main:                                                       ; TODO use this memo
                     pop si es bx ax
                                                             ;TODO write menu
 Next:               in al, 60h                              ; scanf
-                    
-                    cmp al, 2                               ; if(scan == 'print_reg')break;
-                    ; jne Esc_
-                    call Print_regs
-Esc_:               cmp al, 1                               ; can == 'esc')break;
+                    cmp al, 1                               ; (scan_code == 'esc')break;
                     jne Next
-
 
 Finish:             mov ax, 3100h                           ; terminate and stay resident
                     mov dx, offset EOP                      ; save end of program
