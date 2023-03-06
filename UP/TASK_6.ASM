@@ -46,8 +46,73 @@ Old09Seg            dw 0
                     ; iret
                     endp
 ;------------------------------------------------
+
+;------------------------------------------------
+New08               proc
+                    push ax bx cx dx es
+
+; 7-8 - chanel number that we are going tp read(00 - that stands for IRQ0 - 40h)
+; 5-4 - set counter value for 00(use for recriving info)
+
+                    mov al, 001101b
+                    out 43h, al                             ; set mode 3
+
+                    mov al, 00000001b
+                    out 40h, al                             ; set lower byte of counters initial value
+
+                    mov al, 10000000b
+                    out 40h, al                             ; set upper byte of counters initial value
+
+                    xor ax, ax
+                                                            ;read timer value
+                    mov al, 0
+                    out 43h, al       
+
+                    in al, 40h                              ; get lower value
+                    mov cl, al
+                    in al, 40h                              ; get upper byte
+                    mov ch, al
+
+                    ; mov bx, 0b800h                          ; set vidmem
+                    ; mov es, bx                              ; set vidmem
+                    ; mov ah, 4eh                             ; set color(red)
+                    ; mov bx, 160d*6 + 80d                    ; get vid mem - 6th line
+                    ; mov es:[bx], cx
+
+                    ; push ax bx cx dx es
+                    ; mov ax, cx
+                    ; mov dx, 2507h
+                    ; call Write_hex
+                    ; pop es dx cx bx ax
+
+;                     xor cx, cx                    ; ded's delay method
+; @@Delay:            dec cx
+;                     loop @@Delay
+
+;                     cmp cx, 0F0Fh
+;                     je @@Yo                                    ;if al == cx_special
+;                     jmp @@Drop
+; @@Yo:
+;                     push ax bx cx dx es
+;                     call Print_regs
+;                     ; inc cx
+;                     pop es dx cx bx ax     
+@@Drop:             
+                    mov al, 20h                             ; send signal to 20 port INTC
+                    out 20h, al
+
+                    pop es dx cx bx ax
+
+                    db 0EAh                                 ; jmp comand
+Old08Ofs            dw 0
+Old08Seg            dw 0
+
+                    ; iret
+                    endp
+; ------------------------------------------------
+
 Main:                                                       ; TODO use this memory for buffer       
-                    push ax bx es si
+                    push ax bx es si                        ; use macro
 
                     push offset New09
                     push offset Old09Seg
@@ -58,59 +123,25 @@ Main:                                                       ; TODO use this memo
 
                     pop si es bx ax
 
-Next:               in al, 60h                              ;TODO write menu
+                    push ax bx es si
+
+                    push offset New08
+                    push offset Old08Seg
+                    push offset Old08Ofs
+                    mov ax, 8d
+
+                    call Change_int                         ; change int table 9h in particular
+
+                    pop si es bx ax
+                                                            ;TODO write menu
+Next:               in al, 60h                              ; scanf
                     
-                    cmp al, 1                               ; can == 'esc')break;
-                    je h_key_esc
-                    cmp al, 2                               ; if(scan == 'esc')break;
-                    je h_key_print_reg
-                    
-                    jmp Next
+                    cmp al, 2                               ; if(scan == 'print_reg')break;
+                    ; jne Esc_
+                    call Print_regs
+Esc_:               cmp al, 1                               ; can == 'esc')break;
+                    jne Next
 
-                    jmp Finish
-
-h_key_esc:
-                    jmp Finish
-
-h_key_print_reg:
-
-                    push bx cx dx
-                    mov dx, 4005h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-
-                    mov ax, bx                              ; BX
-
-                    push bx cx dx
-                    mov dx, 4006h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-                    pop dx  bx cx
-
-                    mov ax, cx
-
-                    push bx cx dx
-                    mov dx, 4007h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-                    pop dx  bx cx
-
-                    mov ax, dx
-                    push bx cx dx
-                    mov dx, 4008h                           ; print register
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
-                    call Write_hex                          
-                    pop dx  bx cx
-
-                    jmp Next
 
 Finish:             mov ax, 3100h                           ; terminate and stay resident
                     mov dx, offset EOP                      ; save end of program
