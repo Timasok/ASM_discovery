@@ -10,6 +10,7 @@ locals @@
 Start:              jmp Main
 
 INCLUDE BASE.ASM
+INCLUDE READ.ASM
 INCLUDE STRING.ASM
 INCLUDE WRITE.ASM
 INCLUDE CALC.ASM
@@ -22,47 +23,49 @@ New09               proc
 
                     in al, 60h 
 
-                    jmp @@Def_end
-ON:                 db  0ffh, 'ON',  00dh
-OFF:                db  0ffh, 'OFF', 00dh
+                    mov bx, offset Draw_buf
 
-@@Def_end:          
-                    cmp al, 0018h                           ; hot key "on" - ctrl+O
+                    mov ah, 4eh                          ; set color(red)
+                    mov bx, 160d*5 + 80d                    ; get vid mem - 5th line
+                    mov es:[bx], ax 
+                    
+                    jmp @@Def_end
+
+@@ON:               db  0ffh, ' ~74ON!',  00dh
+@@OFF:              db  0ffh, ' ~72OFF', 00dh                     
+
+@@Def_end:                                                    ; set vidmem
+                    cmp al, 0018h                             ; hot key "on" - ctrl+O
                     je @@Turn_on
 
-                    cmp al, 0019h                              ; hot key "off" - ctrl+P
+                    cmp al, 0019h                             ; hot key "off" - ctrl+P
                     jne @@Exit_int 
                     
 @@Turn_off:
-                
+                    mov dx, 0101h                             ; print current scan code
+                    push offset @@OFF
+                    call Write_string 
 
-@@Turn_on:          
-                    ; mov ah, 4eh                             ; set color(red)
+                    jmp @@Exit_int
+@@Turn_on:
 
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
+                    mov dx, 0101h                             ; print current scan code
+                    push offset @@ON
+                    call Write_string     
 
-                    ; mov bx, 160d*5 + 80d                    ; get vid mem - 5th line
-                    ; mov es:[bx], ax  
+                    jmp @@Exit_int 
 
-                    mov dx, 0101h                           ; print current scan code
+@@Exit_int:         in al, 61h                                ; recieve scan code                 PPI->
+                    or al, 80h                                ; 10000000 disable keyboard no matter what is set in al
 
-                    call Write_hex      
-
-@@Exit_int:         in al, 61h                              ; recieve scan code                 PPI->
-                    or al, 80h                              ; 10000000 disable keyboard no matter what is set in al
-
-                    out 61h, al                             ; verify that scan code was recieved ->PPI
-                    and al, not 80h                         ; 01111111 enable keyboard
+                    out 61h, al                               ; verify that scan code was recieved ->PPI
+                    and al, not 80h                           ; 01111111 enable keyboard
                     ; mov al, 20h                             ; send signal to 20 port INTC
                     ; out 20h, al
 
-                    push ax                                 ; read scan code from PPI
-                    pop ax
-
                     pop es dx bx ax
 
-                    db 0EAh                                 ; jmp comand
+                    db 0EAh                                   ; jmp comand
 Old09Ofs            dw 0
 Old09Seg            dw 0
 
@@ -82,26 +85,36 @@ New08               proc
 
                     push ax bx cx dx es
 
-                    cmp al, reg_hide
-                    pushf
+                    ; cmp al, reg_hide
+
+;                     mov cx, 2000d
+;                     SET_VID_PTR
+;                     mov si, offset Draw_buf
+;                     mov di, 0
+; @@Next:             movsw
+;                     add si, 2
+;                     add di, 2
+;                     loop @@Next
+; ;                     je @@Reg_hide
+
+                    pop es dx cx bx ax
+
+                    mov cx, 2000d
+
+                    mov bx, 0b800h
+                    mov es, bx
+                    xor di, di
+                    mov si, offset Draw_buf
+
+@@Next:             mov ax, [si]
+                    mov word ptr es:[di], ax
+                    add si, 2
+                    add di, 2
+                    loop @@Next
+
+                    push ax bx cx dx es
+
 @@Print:            call Print_regs
-                    
-                    popf
-;                     je @@Reg_hide
-
-;                     jmp @@Escape
-
-; @@Reg_hide:
-;                     push ax bx di
-
-;                     mov di, offset Reg_area
-;                     mov ax, 4
-;                     mov bx, Reg_num
-
-;                     call Clr_Rect
-;                     pop di bx ax
-
-;                     jmp @@Escape
 
 @@Escape:           pop es dx cx bx ax
 
@@ -122,8 +135,12 @@ clear           equ    4                                       ; 3 symbol
 stop            equ    5                                       ; 4 symbol
 
 Draw_buf        db   4000 dup (?)
+Save_buf        db   4000 dup (?)
+Change_buf      db   4000 dup (?)
+
 Reg_area        dw   618d                                    ; register start
 Reg_num         dw   13d                                     ; number of registers 
+Button          dw   0d
 
 Main:                                                       ; TODO use this memory for buffer       
                     push ax bx es si                        ; use macro

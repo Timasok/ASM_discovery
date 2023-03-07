@@ -33,7 +33,6 @@ Check_NL        proc
 ;------------------------------------------------
 ;Entry:     p1 - pointer to db with string
 ;           AH - color
-;           AL - 0 if sleep is off, else set 1
 ;           DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
 ;Exit:      
@@ -128,12 +127,12 @@ Write_line      proc
                 jmp @@Loop
 @@Stays_the_same:
 ;===============                                    ; sleep 
-                push cx dx ax
-                mov cx, 0001h
-                mov dx, 0FFFFh
-                mov ah, 86h
-                int 15h
-                pop ax dx cx
+                ; push cx dx ax
+                ; mov cx, 0001h
+                ; mov dx, 0FFFFh
+                ; mov ah, 86h
+                ; int 15h
+                ; pop ax dx cx
 ;===============
                 mov di, offset @@Color              ; set label ptr
                 mov ah, cs:[di]
