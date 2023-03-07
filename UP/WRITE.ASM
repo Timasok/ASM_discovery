@@ -32,6 +32,8 @@ Check_NL        proc
 ;Write string from cmd arg
 ;------------------------------------------------
 ;Entry:     p1 - pointer to db with string
+;           AH - color
+;           AL - 0 if sleep is off, else set 1
 ;           DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
 ;Exit:      
@@ -62,12 +64,18 @@ Write_string        proc
 ;------------------------------------------------
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
+;           AH - color
+;           AL - 0 if sleep is off, else set 1
 ;Exit:      
 ;Expects:   SI is set
 ;Destroys:  AX, BX, CX, SI
 ;------------------------------------------------
 Write_line      proc
-               
+                
+                push ax
+                pop ax
+                push ax
+                
                 cmp dx, 0000h 
                 jne @@Set_Data_Shift
 
@@ -79,7 +87,7 @@ Write_line      proc
 
                 call Get_Vid_Mem                    ; set window size
  
-@@End_Data_Shift:
+@@End_Data_Shift:                                   ; start printin
 
                 lodsb
                 dec al                              ; don't count last symbol
@@ -122,7 +130,7 @@ Write_line      proc
 
 @@Loop:         loop @@Write_main_part
 
-@@Finish:     
+@@Finish:       pop ax
                 ret
                 endp
 ;------------------------------------------------

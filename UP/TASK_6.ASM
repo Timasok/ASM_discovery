@@ -18,26 +18,49 @@ INCLUDE 3_BUF.ASM
 
 ;------------------------------------------------
 New09               proc
-                    push ax bx es
+                    push ax bx dx es
+
+                    in al, 60h 
+
+                    jmp @@Def_end
+ON:                 db  0ffh, 'ON',  00dh
+OFF:                db  0ffh, 'OFF', 00dh
+
+@@Def_end:          
+                    cmp al, 0018h                           ; hot key "on" - ctrl+O
+                    je @@Turn_on
+
+                    cmp al, 0019h                              ; hot key "off" - ctrl+P
+                    jne @@Exit_int 
+                    
+@@Turn_off:
+                
+
+@@Turn_on:          
+                    ; mov ah, 4eh                             ; set color(red)
 
                     mov bx, 0b800h                          ; set vidmem
                     mov es, bx                              ; set vidmem
 
-                    in al, 60h                              ; read scan code from PPI
-                    mov ah, 4eh                             ; set color(red)
-                    mov bx, 160d*5 + 80d                    ; get vid mem - 5th line
-                    mov es:[bx], ax         
+                    ; mov bx, 160d*5 + 80d                    ; get vid mem - 5th line
+                    ; mov es:[bx], ax  
 
-                    in al, 61h                              ; recieve scan code                 PPI->
+                    mov dx, 0101h                           ; print current scan code
+
+                    call Write_hex      
+
+@@Exit_int:         in al, 61h                              ; recieve scan code                 PPI->
                     or al, 80h                              ; 10000000 disable keyboard no matter what is set in al
 
                     out 61h, al                             ; verify that scan code was recieved ->PPI
                     and al, not 80h                         ; 01111111 enable keyboard
+                    ; mov al, 20h                             ; send signal to 20 port INTC
+                    ; out 20h, al
 
-                    mov al, 20h                             ; send signal to 20 port INTC
-                    out 20h, al
+                    push ax                                 ; read scan code from PPI
+                    pop ax
 
-                    pop es bx ax
+                    pop es dx bx ax
 
                     db 0EAh                                 ; jmp comand
 Old09Ofs            dw 0
@@ -50,22 +73,35 @@ Old09Seg            dw 0
 ;------------------------------------------------
 ; Handles 8th interuption 
 ;------------------------------------------------
-;Entry:     AL - current scan code
+;Entry:     BX - mode
 ;Exit:      None
 ;Expects:   
 ;Destroys:
 ;------------------------------------------------
 New08               proc
+
                     push ax bx cx dx es
 
-                    cmp al, escape
-                    je @@Escape
-
-                    jmp @@Print
-
-@@Reg_hide:         mov ah, 1h    
-
+                    cmp al, reg_hide
+                    pushf
 @@Print:            call Print_regs
+                    
+                    popf
+;                     je @@Reg_hide
+
+;                     jmp @@Escape
+
+; @@Reg_hide:
+;                     push ax bx di
+
+;                     mov di, offset Reg_area
+;                     mov ax, 4
+;                     mov bx, Reg_num
+
+;                     call Clr_Rect
+;                     pop di bx ax
+
+;                     jmp @@Escape
 
 @@Escape:           pop es dx cx bx ax
 
@@ -79,13 +115,15 @@ Old08Seg            dw 0
                     endp
 ; ------------------------------------------------
 
-escape      equ    1                                       ; esc symbol
-reg_show    equ    2                                       ; 1 symbol
-reg_hide    equ    3                                       ; 2 symbol
-clear       equ    4                                       ; 3 symbol
-stop        equ    5                                       ; 4 symbol
+escape          equ    1                                       ; esc symbol
+reg_show        equ    2                                       ; 1 symbol
+reg_hide        equ    3                                       ; 2 symbol
+clear           equ    4                                       ; 3 symbol
+stop            equ    5                                       ; 4 symbol
 
-Draw_buf        db 4000 dup (?) 
+Draw_buf        db   4000 dup (?)
+Reg_area        dw   618d                                    ; register start
+Reg_num         dw   13d                                     ; number of registers 
 
 Main:                                                       ; TODO use this memory for buffer       
                     push ax bx es si                        ; use macro

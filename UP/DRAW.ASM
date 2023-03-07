@@ -251,7 +251,7 @@ DrawLine        proc
 ;Exit:      None
 ;Expects:   ES = 0b800h
 ;           Screen size is 25/80
-;Destroys:  CX, 
+;Destroys:  CX
 ;------------------------------------------------
 DrawFrame       proc
 @@Main_part:

@@ -15,6 +15,7 @@ Start:          jmp Main                        ; write video mem address beginn
 INCLUDE BASE.ASM
 INCLUDE READ.ASM
 INCLUDE WRITE.ASM
+INCLUDE STRING.ASM
 ; INCLUDE DRAW.ASM
 
 str1          db 0ffh, ' HELLO_BRUH!', 00dh    ; string for further print(should contain max length, ' ', 0dh)
@@ -29,6 +30,7 @@ Main:
                 call Read_args
                 call Encode_cords               ; as a result we have coords in dx
 
+                mov ah, 00001111b
                 call Write_line
 
                 push offset str1
