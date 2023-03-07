@@ -165,6 +165,53 @@ My_Atoi         proc
 ;------------------------------------------------
 
 ;------------------------------------------------
+;MyAtoh(can be not from comand line)
+;------------------------------------------------
+;Entry:     hex number on SI address
+;Exit:      AL = number
+;Expects:   SI = 0080h                              ; write line address
+;Destroys:  AX, BX, CX, DX
+;------------------------------------------------
+My_Atoh         proc
+
+                xor dx, dx
+                xor ah, ah
+                mov cx, 2                               ; set counter
+
+@@Next:         lodsb
+                push ax
+
+                sub al, 55d
+                cmp al, 15
+                jb @@Wrong_guess
+
+                pop bx                                  ; use bx as a garbage bin
+                jmp @@Finish_iteration
+
+@@Wrong_guess:  pop ax
+                sub al, 48d
+
+@@Finish_iteration:
+
+                push cx                                
+                dec cx                                  ; --cl
+                shr cx, 2                               ; cl *= 4
+
+                shr ax, cl
+                add dx, ax                              ; save read digit to the correct position 
+
+                pop cx
+                loop @@Next
+
+                mov ax, dx
+                xor ah, ah
+                
+                ret
+                endp
+;------------------------------------------------
+
+
+;------------------------------------------------
 ;Read N arguments from cmd line
 ;------------------------------------------------
 ;Entry:     CX = number of arguments

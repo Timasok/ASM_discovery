@@ -7,6 +7,7 @@
 
 .model tiny
 .code
+.286
 org 100h
 locals @@
 
@@ -30,7 +31,7 @@ Main:
                 call Read_args
                 call Encode_cords               ; as a result we have coords in dx
 
-                mov ah, 00001111b
+                mov ah, 00101111b
                 call Write_line
 
                 push offset str1

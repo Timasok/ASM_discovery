@@ -68,13 +68,12 @@ Write_string        proc
 ;           AL - 0 if sleep is off, else set 1
 ;Exit:      
 ;Expects:   SI is set
-;Destroys:  AX, BX, CX, SI
+;Destroys:  AX, BX, CX, SI, DI
 ;------------------------------------------------
 Write_line      proc
                 
-                push ax
-                pop ax
-                push ax
+                mov di, offset @@Color              ; set label ptr
+                mov byte ptr cs:[di], ah
                 
                 cmp dx, 0000h 
                 jne @@Set_Data_Shift
@@ -101,36 +100,54 @@ Write_line      proc
 @@Write_main_part: 
                 lodsb                               ; al = [si++]
                 
-                cmp al, 0dh                         ; if (line[0] == 13) {return;}
+                cmp al, 0dh                         ; if (line[0] == '\0') {return;}
                 je @@Finish
+
                 cmp al, NULL
                 je @@Finish
                 
                 xor ah, ah
                 call Check_NL
+
                 cmp ah, 0
                 jne @@Loop
 
+                cmp al, COL
+                je @@Change_color
+
+                jmp @@Stays_the_same
+@@Change_color: 
+                push bx cx dx
+                call My_Atoh
+                xchg al, ah                         ; change color from now on
+                mov di, offset @@Color              ; set label ptr
+                mov byte ptr cs:[di], ah
+                pop dx cx bx
+                
+                add cx, 2
+                jmp @@Loop
+@@Stays_the_same:
 ;===============                                    ; sleep 
-                push cx
-                push dx
-                push ax
+                push cx dx ax
                 mov cx, 0001h
                 mov dx, 0FFFFh
                 mov ah, 86h
                 int 15h
-                pop ax
-                pop dx
-                pop cx
+                pop ax dx cx
 ;===============
-                
+                mov di, offset @@Color              ; set label ptr
+                mov ah, cs:[di]
+    
+                cmp ah, 0
+                jne @@Print
                 mov ah, 00001111b                   ; set white color - default
-                mov word ptr es:[bx], ax
+
+@@Print:        mov word ptr es:[bx], ax
                 add bx, 2
 
 @@Loop:         loop @@Write_main_part
 
-@@Finish:       pop ax
-                ret
+@@Finish:       ret
+@@Color:        db 0
                 endp
 ;------------------------------------------------
