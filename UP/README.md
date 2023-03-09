@@ -8,7 +8,10 @@ Here what functions contain in different files
     BASE.ASM  - some basic macro's and funcs
     STRING.ASM- contains basic string functions
     DEF_STR.ASM- define of special symbols like '\n', '\0' neccesary to work with stings and write!
-    3_BUF.ASM - has funcs to print registers
+    3_BUF.ASM - has funcs to print registers, clear screen and display messages this functions operate mostly with draw buffer
+    INT_HAND - module that intercepts interuptions
+        INT_8   - periodic redrawing of the screen(including multi buffer juggling)
+        INT_9   - key_board control check
 
     CLEAR.BAT - number of comands to remove not ASM file after compilation
 

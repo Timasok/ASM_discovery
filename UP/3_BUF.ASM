@@ -39,6 +39,45 @@ Set_coords      proc
 ;------------------------------------------------
 
 ;------------------------------------------------
+;Stabilize_registers es&ds
+;------------------------------------------------
+;Entry:     None
+;Exit:      
+;Expects:   Must be used in int handler
+;Destroys:  ES, DS ax
+;------------------------------------------------
+STAB_REGS           macro
+                    nop
+                    push si ax
+                    mov si, offset @@buf_seg 
+                    mov ax, [si]
+                    mov es, ax
+                    mov ds, ax
+                    pop ax si
+                    nop
+                    endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Stabilize_register ds
+;------------------------------------------------
+;Entry:     None
+;Exit:      
+;Expects:   Must be used in int handler
+;Destroys:  ds ax
+;------------------------------------------------
+STAB_DS             macro
+                    nop
+                    ; push si ax
+                    ; mov si, offset @@buf_seg 
+                    mov ax, cs
+                    mov ds, ax
+                    ; pop ax si
+                    nop
+                    endm
+;------------------------------------------------
+
+;------------------------------------------------
 ;Write number in hex(if bx!=0 number is displayed with shift)
 ;------------------------------------------------
 ;Entry:     AX - number
@@ -125,13 +164,12 @@ Write_str_buf       proc
                     mov bp, sp
 
                     push si ax
-                    mov si, offset buf_seg                  ; set draw_buf register
+                    mov si, offset Buf_seg                  ; set draw_buf register
                     mov ax, [si]
                     mov es, ax
                     pop ax si
 
                     call Set_coords
-                    ; call Get_Vid_Mem
 
                     push si
                     push ax
@@ -164,7 +202,7 @@ Write_str_buf       proc
 ;------------------------------------------------
 Clr_Rect        proc
 
-                mov si, offset buf_seg                  ; set vidmem
+                mov si, offset Buf_seg                  ; set vidmem
                 mov ax, [si]
                 mov es, ax
 
@@ -200,7 +238,7 @@ Print_regs          proc
                     pushf
                     
                     push si ax
-                    mov si, offset buf_seg                  ; set vidmem
+                    mov si, offset Buf_seg                  ; set vidmem
                     mov ax, [si]
                     mov es, ax
                     pop ax si
