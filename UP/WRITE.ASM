@@ -18,7 +18,7 @@ Check_NL        proc
 
 @@Print_NL:     push ax
                 
-                add dx, 0001h           ; y+=1
+                add dx, 0001h           ; y +=1
                 call Get_Vid_Mem
 
                 pop ax
@@ -66,7 +66,7 @@ Write_string        proc
 ;           AH - color
 ;           AL - 0 if sleep is off, else set 1
 ;Exit:      
-;Expects:   SI is set
+;Expects:   ES, SI are set
 ;Destroys:  AX, BX, CX, SI, DI
 ;------------------------------------------------
 Write_line      proc
@@ -141,7 +141,7 @@ Write_line      proc
                 jne @@Print
                 mov ah, 00001111b                   ; set white color - default
 
-@@Print:        mov word ptr es:[bx], ax
+@@Print:        mov word ptr es:[bx], ax            ; stosw with bx
                 add bx, 2
 
 @@Loop:         loop @@Write_main_part

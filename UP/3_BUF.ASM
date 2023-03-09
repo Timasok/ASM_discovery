@@ -1,11 +1,52 @@
 ;------------------------------------------------
-;Write number in hex
+;Get video mem address according to cordinates
+;------------------------------------------------
+;Entry:     DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;           DI - relative shift
+;Exit:      NEW DX
+;Expects:   
+;           Screen size is 25/80
+;Destroys:  DX
+;------------------------------------------------
+Set_coords      proc
+
+                push ax cx di  
+
+                push ax cx di                        ; save unchanged coordinates
+                call Get_Vid_Mem
+                pop di cx ax
+
+                add di, bx                            ; get value
+
+                mov cl, 1d                            ; set 1 bit shift /2^1
+                shr di, cl     
+
+                xor dx, dx                            ; count ax /= 80
+
+                mov ax, di                            ; ax = y
+                mov cx, 80d                           ; dx = x
+                div cx
+
+                mov dh, al                            ; ah = x, al = y
+                xchg dh, dl
+
+                add dx, 0101h                         ; to standart view
+
+                pop di cx ax
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+;Write number in hex(if bx!=0 number is displayed with shift)
 ;------------------------------------------------
 ;Entry:     AX - number
 ;           DH - x left top coordinate(0-80)
 ;           DL - y left top coordinate(0-25)
+;           DI - initial shift in memory
 ;Exit:      Nothing
-;Expects:   ES = 0b800h
+;Expects:   ES = offset draw_buf
 ;Destroys:  
 ;------------------------------------------------
 Write_in_hex    proc
@@ -14,7 +55,9 @@ Write_in_hex    proc
 
                 push ax                         ; revive cords values
                 call Get_Vid_Mem
-                pop ax
+                pop ax                          ; old_bx->cx
+                
+                add bx, di                      ; count address         
 
                 mov cx, 4                       ; set counter
 @@Next:         
@@ -65,28 +108,80 @@ Write_in_hex    proc
 ;------------------------------------------------
 
 ;------------------------------------------------
+;Write string from cmd arg
+;------------------------------------------------
+;Entry:     p1 - pointer to db with string
+;           AH - color
+;           DH - x0 coordinate(0-80)
+;           DL - y0 coordinate(0-25)
+;           DI - initial shift in memory
+;Exit:      
+;Expects:   db should start with special symbol -
+; with code of ffh to save the opportunity to write lines with length up to 255 symbols
+;Destroys:  AX, BX, CX
+;------------------------------------------------
+Write_str_buf       proc
+                    push bp
+                    mov bp, sp
+
+                    push si ax
+                    mov si, offset buf_seg                  ; set draw_buf register
+                    mov ax, [si]
+                    mov es, ax
+                    pop ax si
+
+                    call Set_coords
+                    ; call Get_Vid_Mem
+
+                    push si
+                    push ax
+
+                    mov si, offset buf_seg                  ; set vidmem
+                    mov ax, [si]
+                    mov es, ax
+                    
+                    mov si, [bp+4]                          ; get shift
+                    pop ax
+                    push ax
+                    call Write_line
+                    pop ax
+                    pop si
+
+                    pop bp
+                    retn 2
+                    endp
+;------------------------------------------------
+
+;------------------------------------------------
 ;Draw rectangle
 ;------------------------------------------------
-;Entry:     DI - area start
-;           AX - width
-;           BX - height
+;Entry:     DI - area start relative to ds
+;           BX - width
+;           CX - height
 ;Exit:      None
-;Expects:   ES = 0b800h
-;Destroys:  None
+;Expects:   
+;Destroys:  AX, BX, CX, ES, DI
 ;------------------------------------------------
 Clr_Rect        proc
 
-                mov cx, bx
-                mov bx, 0720h               ; black symbol
-@@First:                                    ; height
-                push cx                     
-                mov cx, ax
-@@Second:                                   ; width
-                mov word ptr es:[di], bx    
+                mov si, offset buf_seg                  ; set vidmem
+                mov ax, [si]
+                mov es, ax
 
-                loop @@Second
-                pop cx
+                mov ax, BL_SPACE                        ; black space
+
+@@First:                                                ; height
+                push di si cx                     
+                mov cx, bx                              ;--------------------
+
+@@Second:                                               ; width
+                stosw                                        ;
+                loop @@Second                           ;--------------
+                pop cx si di
         
+                add si, 80d
+                add di, 80d
+
                 loop @@First
 
                 ret
@@ -94,33 +189,36 @@ Clr_Rect        proc
 ;------------------------------------------------
 
 ;------------------------------------------------
-;Print all registers
+;Save all reg values in draw buffer
 ;------------------------------------------------
 ;Entry:    
-;Exit:      Nothing
+;Exit:     Nothing
 ;Expects:   
-;Destroys: None
+;Destroys:  ax bx cx dx di es si
 ;------------------------------------------------
 Print_regs          proc
                     pushf
-                    push ax bx cx dx                             ; save ax
+                    
+                    push si ax
+                    mov si, offset buf_seg                  ; set vidmem
+                    mov ax, [si]
+                    mov es, ax
+                    pop ax si
 
                     push cs ss es ds es sp bp di si dx cx bx ax
 
                     mov cx, 13d
                     mov dx, 4503h                           ; set initial cordinates
 
-                    mov bx, 0b800h                          ; set vidmem
-                    mov es, bx                              ; set vidmem
-
+                    mov di, offset Draw_buf                 ; set vidmem
 @@Next:         
-                    pop ax
-                    call Write_in_hex                       ; todo add print via buffer  
+                    pop ax                                  ; get current register
+
+                    call Write_in_hex 
                     add dx, 0001h
 
                     loop @@Next
 
-                    pop dx cx bx ax
                     popf
 
                     ret

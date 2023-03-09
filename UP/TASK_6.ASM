@@ -23,16 +23,20 @@ New09               proc
 
                     in al, 60h 
 
-                    mov bx, offset Draw_buf
-
-                    mov ah, 4eh                          ; set color(red)
-                    mov bx, 160d*5 + 80d                    ; get vid mem - 5th line
+                    ; mov bx, offset Draw_buf
+                    SET_VID_PTR
+                    mov ah, 4eh                               ; set color(red)
+                    mov bx, 160d*5 + 80d                      ; get vid mem - 5th line
                     mov es:[bx], ax 
+
+                    ; mov ax, 
+                    ; mov es, ax
                     
                     jmp @@Def_end
 
 @@ON:               db  0ffh, ' ~74ON!',  00dh
-@@OFF:              db  0ffh, ' ~72OFF', 00dh                     
+@@OFF:              db  0ffh, ' ~72OFF', 00dh       
+              
 
 @@Def_end:                                                    ; set vidmem
                     cmp al, 0018h                             ; hot key "on" - ctrl+O
@@ -44,14 +48,16 @@ New09               proc
 @@Turn_off:
                     mov dx, 0101h                             ; print current scan code
                     push offset @@OFF
-                    call Write_string 
+                    mov di, offset Draw_buf
+                    call Write_str_buf
 
                     jmp @@Exit_int
 @@Turn_on:
 
                     mov dx, 0101h                             ; print current scan code
                     push offset @@ON
-                    call Write_string     
+                    mov di, offset Draw_buf
+                    call Write_str_buf     
 
                     jmp @@Exit_int 
 
@@ -79,12 +85,9 @@ Old09Seg            dw 0
 ;Entry:     BX - mode
 ;Exit:      None
 ;Expects:   
-;Destroys:
+;Destroys: BX, SI, DI
 ;------------------------------------------------
 New08               proc
-
-                    push ax bx cx dx es
-
                     ; cmp al, reg_hide
 
 ;                     mov cx, 2000d
@@ -97,24 +100,22 @@ New08               proc
 ;                     loop @@Next
 ; ;                     je @@Reg_hide
 
-                    pop es dx cx bx ax
-
-                    mov cx, 2000d
-
-                    mov bx, 0b800h
-                    mov es, bx
+                    push ax bx cx dx di es si                           ; save ax
+@@Print:            call Print_regs                             ; 1) rewrite draw_buf
+                    pop si es di dx cx bx ax
+                    
+                    mov cx, 1000d                               ; 2) cmp vid_mem with draw_buf 
+                                                                ; if is need rewrite vidmem and rewrite save_buf
+                    SET_VID_PTR
                     xor di, di
                     mov si, offset Draw_buf
 
-@@Next:             mov ax, [si]
-                    mov word ptr es:[di], ax
-                    add si, 2
-                    add di, 2
+@@Next:             movsw                                       ; copy from draw_buf to vid memory
+
                     loop @@Next
 
                     push ax bx cx dx es
 
-@@Print:            call Print_regs
 
 @@Escape:           pop es dx cx bx ax
 
@@ -134,13 +135,16 @@ reg_hide        equ    3                                       ; 2 symbol
 clear           equ    4                                       ; 3 symbol
 stop            equ    5                                       ; 4 symbol
 
-Draw_buf        db   4000 dup (?)
-Save_buf        db   4000 dup (?)
-Change_buf      db   4000 dup (?)
+Buf_seg         db   3    dup (?)
+Draw_buf        db   2000 dup (?)
+Save_buf        db   2000 dup (?)
+Change_buf      db   2000 dup (?)
 
 Reg_area        dw   618d                                    ; register start
 Reg_num         dw   13d                                     ; number of registers 
 Button          dw   0d
+
+CHECK:              db  0ffh, ' ~72CHECK', 00dh
 
 Main:                                                       ; TODO use this memory for buffer       
                     push ax bx es si                        ; use macro
@@ -150,7 +154,7 @@ Main:                                                       ; TODO use this memo
                     push offset Old09Ofs
                     mov ax, 9d
 
-                    call Change_int                         ; change int table 9h in particular
+                    call Change_int                           ; change int table 9h in particular
 
                     pop si es bx ax
 
@@ -161,9 +165,37 @@ Main:                                                       ; TODO use this memo
                     push offset Old08Ofs
                     mov ax, 8d
 
-                    call Change_int                         ; change int table 9h in particular
-
+                    call Change_int                           ; change int table 9h in particular
                     pop si es bx ax
+
+;--------------
+                    mov word ptr offset Buf_seg, ds           ; save ds segment value
+                                                              ; set segment register of drae_buf
+                    push ax bx cx dx es
+                    
+                    mov di, offset Draw_buf
+                    mov bx, 40d
+                    mov cx, 24d
+                    call Clr_Rect                             ; clr_scr
+                    pop es dx cx bx ax
+
+                    push ax bx cx dx di es si
+                    mov dx, 0101h                             
+                    push offset CHECK
+                    mov di, offset Draw_buf
+                    call Write_str_buf                        ; write_string                   
+                    pop si es di dx cx bx ax
+
+                    push ax bx cx dx di es si
+                    call Print_regs                           ; print reg
+                    pop si es di dx cx bx ax
+
+                    ; push cx dx ax
+                    ; mov cx, 0001h
+                    ; mov dx, 0FFFFh
+                    ; mov ah, 86h
+                    ; int 15h
+                    ; pop ax dx cx
                                                             ;TODO write menu
 Next:               in al, 60h                              ; scanf
                     cmp al, 1                               ; (scan_code == 'esc')break;
@@ -178,7 +210,7 @@ EOP:                                                        ; after EOP db for b
                     jmp END_all
 
 ;------------------------------------------------
-;change int table
+;Change int table
 ;------------------------------------------------
 ;Entry:     p3 - New addr
 ;           p2 - old addr segment
