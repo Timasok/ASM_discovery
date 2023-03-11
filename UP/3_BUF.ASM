@@ -275,16 +275,15 @@ Print_regs          proc
 
 
 ;------------------------------------------------
-;Save all reg values in draw buffer
+;Vidmem_to_save
 ;------------------------------------------------
 ;Entry:    DX - coordinates
 ;          DI - initial register address
 ;Exit:     Nothing
 ;Expects:   
-;Destroys:  ax cx di
+;Destroys:  si di cx ax
 ;------------------------------------------------
-Vidmem_to_save      proc
-                    push ax cx di si
+Vidmem_to_save      proc  
                     SET_ES_B800                             ; ES = b800 bx = 0
                     xor di, di                              ; DI
                                                             ; DS
@@ -295,23 +294,20 @@ Vidmem_to_save      proc
                                                             ; todo add special check(use other buffers!)
                     loop @@Next
                     SET_ES_DS                               ; es = ds bx = 0
-                    pop  si di cx ax      
-
                     endp
 ;------------------------------------------------
 
 
 ;------------------------------------------------
-;Save all reg values in draw buffer
+;Save_to_vidmem
 ;------------------------------------------------
 ;Entry:    DX - coordinates
 ;          DI - initial register address
 ;Exit:     Nothing
 ;Expects:   
-;Destroys:  ax cx di
+;Destroys:  si di cx ax
 ;------------------------------------------------
 Save_to_vidmem      proc
-                    push ax cx di si
                     SET_ES_B800                             ; ES = b800 bx = 0
                     xor di, di                              ; DI
                                                             ; DS
@@ -321,7 +317,6 @@ Save_to_vidmem      proc
 @@Next:             movsw                                   ; ds:si -> ax -> es:di 
                                                             ; todo add special check(use other buffers!)
                     loop @@Next
-                    SET_ES_DS                               ; es = ds bx = 0
-                    pop  si di cx ax   
+                    SET_ES_DS                               ; es = ds bx = 0   
                     endp
 ;------------------------------------------------

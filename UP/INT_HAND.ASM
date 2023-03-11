@@ -8,8 +8,6 @@
 ;------------------------------------------------
 New08               proc                   
 
-                    ; jmp @@Error
-
                     cmp bx, 0
                     je @@Hide_registers
                     cmp bx, 1
@@ -43,18 +41,36 @@ New08               proc
                     jmp @@Refresh
 
 @@Refresh:
-                    push ax cx di si
+                    push ax cx si
                     SET_ES_B800                             ; ES = b800 bx = 0
                     xor di, di                              ; DI
                                                             ; DS
                     mov si, offset Draw_buf                 ; SI
-
                     mov cx, 2000d                           ; refresh window
-@@Next:             movsw                                   ; ds:si -> ax -> es:di
-                                                            ; todo add special check(use other buffers!)
+
+                    push bx
+                    mov bx, offset Save_buf
+
+@@Next:             mov ax, es:[di]                         ; ds:si -> ax -> es:di
+                    cmp [si], ax
+                    je @@Equal
+
+@@Not_equal:        mov ax, es:[di]
+                    mov word ptr ds:[bx], ax
+                    movsw
+
+                    jmp @@End_loop
+
+@@Equal:            add si, 2
+                    add di, 2
+                    jmp @@End_loop
+
+@@End_loop:         add bx, 2
                     loop @@Next
+                    pop bx
+                    
                     SET_ES_DS                               ; es = ds bx = 0
-                    pop  si di cx ax      
+                    pop si cx ax      
                     
 @@Exit:
                     db 0EAh                                     ; jmp comand
@@ -63,6 +79,10 @@ Old08Seg            dw 0
 
                     endp
 ; -----------------------------------------------
+; @@Next:             movsw                                   ; ds:si -> ax -> es:di
+;                                                             ; todo add special check(use other buffers!)
+;                     loop @@Next
+
 
                     ; mov al, 20h                               ; send signal to 20 port INTC
                     ; out 20h, al
@@ -95,22 +115,46 @@ New09               proc
                     jne @@Exit_int 
                     
 @@Turn_off:          
+                    mov ax, cs		                            ; segment of src copying
+                    mov si, offset Save_buf			            ; address of src copying
+                    mov bx, 0B800h				                ; segment of dst copying
+                    mov di, 0h 	                                ; address of dst copying
+                    mov cx, 4000d			                    ; number of copying buf
+                    call MemCpy			                        ; copy from VideoMem to SaveBuf
+                    
+                    ; mov bx, offset Show_Regs_Mode
+                    ; mov byte ptr [bx], 0FFh		; set "on" mode
+
+                    ; push ax cx di si
+                    ; call Save_to_vidmem
+                    ; pop  si di cx ax
+
                     push offset @@OFF
                     mov dx, 0101h                               ; print current scan code
                     mov di, offset Draw_buf
                     call Write_str_buf
 
-                    ; call Save_to_vidmem
-
                     mov bx, 0
                     jmp @@Exit_int
 @@Turn_on:
+                    mov ax, 0B800h			                    ; segment of src copying
+                    mov si, 0h			                        ; address of src copying
+                    mov bx, cs			                        ; segment of dst copying
+                    mov di, offset Save_buf 	                ; address of dst copying
+                    mov cx, 4000d			                    ; number of copying buf
+                    call MemCpy			                        ; copy from VideoMem to SaveBuf
+                    
+                    ; mov bx, offset Show_Regs_Mode
+                    ; mov byte ptr [bx], 0FFh		; set "on" mode
+
+                    ; push ax cx di si
+                    ; call Vidmem_to_save
+                    ; pop  si di cx ax
+
                     push offset @@ON
                     mov dx, 0101h                             ; print current scan code
                     mov di, offset Draw_buf
                     call Write_str_buf
-
-                    ; call Vidmem_to_save
 
                     mov bx, 1
                     jmp @@Exit_int 

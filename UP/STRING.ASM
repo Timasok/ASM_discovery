@@ -392,22 +392,46 @@ strchr          proc
 ;Expects:   
 ;Destroys:  SI, ES, DI, CX
 ;------------------------------------------------
-memcpy          proc
-                push bp
-                mov bp, sp
+; memcpy          proc
+;                 push bp
+;                 mov bp, sp
                 
-                push ds
-                pop es
+;                 push ds
+;                 pop es
 
-                mov di, [bp+8]                  ; set dest ptr
-                mov si, [bp+6]                  ; set src  ptr
+;                 mov di, [bp+8]                  ; set dest ptr
+;                 mov si, [bp+6]                  ; set src  ptr
 
-                mov cx, [bp+4]                  ; set cx
+;                 mov cx, [bp+4]                  ; set cx
 
-                rep movsb 
+;                 rep movsb 
 
-                pop bp
-                retn 6
+;                 pop bp
+;                 retn 6
+;                 endp
+;------------------------------------------------
+
+;------------------------------------------------
+; Memcpy - writes p1 symbols
+;------------------------------------------------
+;Entry:     si - address of src copying
+;           bx - segment of dst copying
+;           di - address of dst copying
+;           cx - number of copying buf
+;Exit:      None
+;Expects:   
+;Destroys:  SI, ES, DI, CX
+;------------------------------------------------
+MemCpy          proc
+                push es ds si di
+
+                mov ds, ax
+                mov es, bx
+                cld		; DF = 0 <-- setting increasing mode
+                rep movsb 	; while (cx--) {es:[di++] = ds:[si++]}
+
+                pop di si ds es
+                ret
                 endp
 ;------------------------------------------------
 

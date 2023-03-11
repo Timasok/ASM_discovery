@@ -16,10 +16,10 @@ reg_hide        equ    3                                    ; 2 symbol
 clear           equ    4                                    ; 3 symbol
 stop            equ    5                                    ; 4 symbol
 
-Buf_seg         db   3    dup (?)
+Buf_seg         db   2    dup (?)
+Mode            db   1    dup (?)
 Draw_buf        db   4000 dup (?)
 Save_buf        db   4000 dup (?)
-Change_buf      db   4000 dup (?)
 
 Reg_area        dw   618d                                   ; register start
 Reg_num         dw   13d                                    ; number of registers 
@@ -57,7 +57,7 @@ Main:                                                       ; TODO use this memo
 
                     xor bx, bx                              ; set default mode(registers off)
 
-;===========
+;===============
                     SET_ES_DS                                  ; es = ds bx = 0
                     push ax bx cx dx di si
                     mov bx, 80d
