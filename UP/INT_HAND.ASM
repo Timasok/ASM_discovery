@@ -50,19 +50,23 @@ New08               proc
                     jmp @@Refresh
 
 @@Refresh:
-                    push ax cx si di
+                    push ax bx cx dx si di es
                     SET_ES_B800                             ; ES = b800 bx = 0
                     xor di, di                              ; DI
                                                             ; DS
-                    mov si, offset Draw_buf                 ; SI
+                    lea si, Draw_buf                 ; SI
                     mov cx, 2000d                           ; refresh window
 
+; @@Next:             movsw
+;                     loop @@Next
+
 @@Next:             mov word ptr ax, es:[di]                         ; ds:si -> ax -> es:di
-                    cmp [si], ax
+                    mov bx,[si] 
+                    cmp bx, ax
                     je @@Equal
 
 @@Not_equal:        mov word ptr ax, es:[di]
-                    mov word ptr ds:[offset Save_buf - offset Draw_buf + si], ax
+                    mov word ptr ds:[offset Save_buf + di], ax
                     movsw
 
                     jmp @@End_loop
@@ -71,11 +75,9 @@ New08               proc
                     add di, 2
                     jmp @@End_loop
 @@End_loop:         
-                    ; add bx, 2
-                    loop @@Next
-                    
-                    SET_ES_DS                               ; es = ds bx = 0
-                    pop di si cx ax      
+                    loop @@Next                             ; es = ds bx = 0
+                    ; ax bx cx dx si di es
+                    pop es di si dx cx bx ax      
 @@Exit:
 	                pop ds es sp bp di si dx cx bx ax	      ; revive reg
 
@@ -171,7 +173,7 @@ New09               proc
                     and al, not 80h                             ; 01111111 enable keyboard
 
 ;==
-                    pop ds es sp bp di si dx cx bx ax
+                    pop  ds es sp bp di si dx cx bx ax
                     db 0EAh                                   ; jmp comand
 Old09Ofs            dw 0
 Old09Seg            dw 0

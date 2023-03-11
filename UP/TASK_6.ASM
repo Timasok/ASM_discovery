@@ -35,12 +35,12 @@ INCLUDE 3_BUF.ASM
 
 INCLUDE INT_HAND.ASM
 
-CHECK:              db  0ffh, ' ~72CHECK', 00dh
+CHECK:              db  0ffh, ' ~72This is save buffer!', 00dh
 ERROR:              db  0ffh, ' ~74ERROR', 00dh
 
 Main:                                                       ; TODO use this memory for buffer       
+;===============
                     push ax bx es si                        ; use macro
-
                     push offset New09
                     push offset Old09Seg
                     push offset Old09Ofs
@@ -48,8 +48,17 @@ Main:                                                       ; TODO use this memo
 
                     call Change_int                         ; change int table 9h in particular
                     pop si es bx ax
+;===============
+                    push ax bx es si                        ; change int table 8h in particular
+                    push offset New08
+                    push offset Old08Seg
+                    push offset Old08Ofs
+                    mov ax, 8d
+                    call Change_int                       
+                    pop si es bx ax
 
 ;===============
+
                     mov di, offset Draw_buf                 ; offset must be even!
                     SET_ES_DS                               ; es = ds bx = 0
                     push ax bx cx dx di si
@@ -67,15 +76,6 @@ Main:                                                       ; TODO use this memo
                     mov dx, 0101h
                     call Clr_Rect                           ; clr_scr
                     pop si di dx cx bx ax
-;===============
-                    push ax bx es si                        ; change int table 8h in particular
-                    push offset New08
-                    push offset Old08Seg
-                    push offset Old08Ofs
-                    mov ax, 8d
-                    call Change_int                       
-                    pop si es bx ax
-;===============
 
                     SET_ES_B800
                     push ax bx cx dx si                     ; write_string check
