@@ -178,26 +178,15 @@ Write_in_hex    proc
 Write_str_buf       proc
                     push bp
                     mov bp, sp
-;=================
-                    ; push si ax
-                    ; mov si, offset Buf_seg                  ; set draw_buf register
-                    ; mov ax, [si]
-                    ; mov es, ax
-                    ; pop ax si
-;=================
-                    call Set_coords
+
+                    call Set_coords                         ; get new dx
 
                     push si
                     push ax
 
-                    mov si, offset buf_seg                  ; set vidmem
-                    mov ax, [si]
-                    mov es, ax
-                    
                     mov si, [bp+4]                          ; get shift
-                    pop ax
-                    push ax
                     call Write_line
+
                     pop ax
                     pop si
 
@@ -281,5 +270,58 @@ Print_regs          proc
                     loop @@Next
 
                     ret
+                    endp
+;------------------------------------------------
+
+
+;------------------------------------------------
+;Save all reg values in draw buffer
+;------------------------------------------------
+;Entry:    DX - coordinates
+;          DI - initial register address
+;Exit:     Nothing
+;Expects:   
+;Destroys:  ax cx di
+;------------------------------------------------
+Vidmem_to_save      proc
+                    push ax cx di si
+                    SET_ES_B800                             ; ES = b800 bx = 0
+                    xor di, di                              ; DI
+                                                            ; DS
+                    mov si, offset Save_buf                 ; SI
+
+                    mov cx, 2000d                           ; refresh window
+@@Next:             call Movsw_reverse                      ;  es:di-> ax -> ds:si 
+                                                            ; todo add special check(use other buffers!)
+                    loop @@Next
+                    SET_ES_DS                               ; es = ds bx = 0
+                    pop  si di cx ax      
+
+                    endp
+;------------------------------------------------
+
+
+;------------------------------------------------
+;Save all reg values in draw buffer
+;------------------------------------------------
+;Entry:    DX - coordinates
+;          DI - initial register address
+;Exit:     Nothing
+;Expects:   
+;Destroys:  ax cx di
+;------------------------------------------------
+Save_to_vidmem      proc
+                    push ax cx di si
+                    SET_ES_B800                             ; ES = b800 bx = 0
+                    xor di, di                              ; DI
+                                                            ; DS
+                    mov si, offset Save_buf                 ; SI
+
+                    mov cx, 2000d                           ; refresh window
+@@Next:             movsw                                   ; ds:si -> ax -> es:di 
+                                                            ; todo add special check(use other buffers!)
+                    loop @@Next
+                    SET_ES_DS                               ; es = ds bx = 0
+                    pop  si di cx ax   
                     endp
 ;------------------------------------------------

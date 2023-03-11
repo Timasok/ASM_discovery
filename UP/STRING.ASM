@@ -219,25 +219,25 @@ My_movsb        proc
 ;------------------------------------------------
 
 ;------------------------------------------------
-; movsw - moves word from es:di to ds:si 
+; movsw - moves word from ds:si to es:di
 ;------------------------------------------------
 ;Entry:     DI, SI
 ;Exit:      None
 ;Expects:   
 ;Destroys:  DI, SI
 ;------------------------------------------------
-My_movsw        proc
+Movsw_reverse   proc
                 push ax
-                mov ax, [si]
-                mov word ptr es:[di], ax
+                mov ax, es:[di]
+                mov word ptr [si], ax
 
-                CHECK_DF
+                ; CHECK_DF
                 
-                je @@Inc                    ; dec
-                sub si, 2
-                sub di, 2
+                ; je @@Inc                    ; dec
+                ; sub si, 2
+                ; sub di, 2
 
-                jmp @@End                   ; inc
+;                 jmp @@End                   ; inc
 @@Inc:          add si, 2
                 add di, 2
 
