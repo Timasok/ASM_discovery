@@ -64,6 +64,16 @@ Main:
                     inc dx
                     mov cl, 1h                              ; set hot_key
 
+                    SET_VID_PTR                                 ; ES
+                    xor di, di                                  ; DI
+
+                    ; STAB_DS                                     ; DS
+                    mov si, offset Draw_buf                     ; SI
+
+                    mov cx, 2000d                               ; 
+@@Next:             movsw                                       ; ds:si -> ax -> es:di
+                    loop @@Next
+
 Next:               in al, 60h
                     cmp al, cl                              ; if(scan == 'esc')break;
                     jne Next

@@ -46,16 +46,32 @@ Set_coords      proc
 ;Expects:   Must be used in int handler
 ;Destroys:  ES, DS ax
 ;------------------------------------------------
-STAB_REGS           macro
+SET_ES_DS              macro
                     nop
-                    push si ax
-                    mov si, offset @@buf_seg 
-                    mov ax, [si]
-                    mov es, ax
-                    mov ds, ax
-                    pop ax si
+                    push bx 
+                    mov bx, ds
+                    mov es, bx
+                    pop bx 
                     nop
                     endm
+;------------------------------------------------
+
+;------------------------------------------------
+;Sets vid memory ptr to es
+;------------------------------------------------
+;Entry:     None
+;Exit:      es = 0b800h
+;Expects:   Nothing
+;Destroys:  
+;------------------------------------------------
+SET_ES_B800     macro
+                nop
+                push bx
+		        mov bx, 0b800h					    ; write video mem address beginning
+		        mov es, bx
+                pop bx
+                nop
+                endm
 ;------------------------------------------------
 
 ;------------------------------------------------
@@ -162,13 +178,13 @@ Write_in_hex    proc
 Write_str_buf       proc
                     push bp
                     mov bp, sp
-
-                    push si ax
-                    mov si, offset Buf_seg                  ; set draw_buf register
-                    mov ax, [si]
-                    mov es, ax
-                    pop ax si
-
+;=================
+                    ; push si ax
+                    ; mov si, offset Buf_seg                  ; set draw_buf register
+                    ; mov ax, [si]
+                    ; mov es, ax
+                    ; pop ax si
+;=================
                     call Set_coords
 
                     push si
@@ -196,68 +212,73 @@ Write_str_buf       proc
 ;Entry:     DI - area start relative to ds
 ;           BX - width
 ;           CX - height
+;           DX - start coords
 ;Exit:      None
 ;Expects:   
-;Destroys:  AX, BX, CX, ES, DI
+;Destroys:  AX, BX, CX, ES, DI, DX
 ;------------------------------------------------
 Clr_Rect        proc
 
-                mov si, offset Buf_seg                  ; set vidmem
-                mov ax, [si]
-                mov es, ax
+;=================
+    ;                 mov si, offset Buf_seg                ; set vidmem
+    ;                 mov ax, [si]
+    ;                 mov es, ax
+;=================
+                    push bx
+                    call Get_Vid_Mem
+                    add di, bx
+                    pop bx
 
-                mov ax, BL_SPACE                        ; black space
+                    mov ax, BL_SPACE                        ; black space
 
-@@First:                                                ; height
-                push di si cx                     
-                mov cx, bx                              ;--------------------
+@@First:                                                    ; height
+                    push di si cx     
 
-@@Second:                                               ; width
-                stosw                                        ;
-                loop @@Second                           ;--------------
-                pop cx si di
-        
-                add si, 80d
-                add di, 80d
+                    mov cx, bx                              ;--------------------
 
-                loop @@First
+@@Second:                                                   ; width
+                    stosw                                   ; ax->es:di
+                    loop @@Second                           ;--------------
+                    pop cx si di
 
-                ret
-                endp
+                    add si, 160d
+                    add di, 160d
+
+                    loop @@First
+
+                    ret
+                    endp
 ;------------------------------------------------
 
 ;------------------------------------------------
 ;Save all reg values in draw buffer
 ;------------------------------------------------
-;Entry:    
+;Entry:    DX - coordinates
+;          DI - initial register address
 ;Exit:     Nothing
 ;Expects:   
-;Destroys:  ax bx cx dx di es si
+;Destroys:  ax cx di
 ;------------------------------------------------
 Print_regs          proc
-                    pushf
-                    
-                    push si ax
-                    mov si, offset Buf_seg                  ; set vidmem
-                    mov ax, [si]
-                    mov es, ax
-                    pop ax si
-
+;=================  
+                    ; push si ax
+                    ; mov si, offset Buf_seg                  ; set vidmem
+                    ; mov ax, [si]
+                    ; mov es, ax
+                    ; pop ax si
+;=================
                     push cs ss es ds es sp bp di si dx cx bx ax
 
                     mov cx, 13d
-                    mov dx, 4503h                           ; set initial cordinates
-
-                    mov di, offset Draw_buf                 ; set vidmem
+                    mov dx, 4503h                           ; register
+                    mov di, offset Draw_buf
 @@Next:         
                     pop ax                                  ; get current register
 
                     call Write_in_hex 
-                    add dx, 0001h
+                    add dx, 0001h                           ; y++
 
                     loop @@Next
-
-                    popf
 
                     ret
                     endp
