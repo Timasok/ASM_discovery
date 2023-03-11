@@ -427,8 +427,8 @@ MemCpy          proc
 
                 mov ds, ax
                 mov es, bx
-                cld		; DF = 0 <-- setting increasing mode
-                rep movsb 	; while (cx--) {es:[di++] = ds:[si++]}
+                cld		                ; DF = 0 <-- setting increasing mode
+                rep movsb               ; while (cx--) {es:[di++] = ds:[si++]}
 
                 pop di si ds es
                 ret

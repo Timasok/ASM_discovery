@@ -16,8 +16,8 @@ reg_hide        equ    3                                    ; 2 symbol
 clear           equ    4                                    ; 3 symbol
 stop            equ    5                                    ; 4 symbol
 
-Buf_seg         db   2    dup (?)
-Mode            db   1    dup (?)
+; Buf_seg         db   2    dup (?)
+Mode            db   0
 Draw_buf        db   4000 dup (?)
 Save_buf        db   4000 dup (?)
 
@@ -49,23 +49,25 @@ Main:                                                       ; TODO use this memo
                     call Change_int                         ; change int table 9h in particular
                     pop si es bx ax
 
-;--------------
-                    mov word ptr offset Buf_seg, ds         ; save ds segment value
-                                                            ; set segment register of drae_buf
-
-                    mov di, offset Draw_buf                 ; offset must be even!
-
-                    xor bx, bx                              ; set default mode(registers off)
-
 ;===============
-                    SET_ES_DS                                  ; es = ds bx = 0
+                    mov di, offset Draw_buf                 ; offset must be even!
+                    SET_ES_DS                               ; es = ds bx = 0
                     push ax bx cx dx di si
                     mov bx, 80d
-                    mov cx, 25d
+                    mov cx, 24d
                     mov dx, 0101h
                     call Clr_Rect                           ; clr_scr
                     pop si di dx cx bx ax
 
+                    mov di, offset Save_buf  
+                    SET_ES_DS                               ; es = ds bx = 0
+                    push ax bx cx dx di si
+                    mov bx, 80d
+                    mov cx, 24d
+                    mov dx, 0101h
+                    call Clr_Rect                           ; clr_scr
+                    pop si di dx cx bx ax
+;===============
                     push ax bx es si                        ; change int table 8h in particular
                     push offset New08
                     push offset Old08Seg
@@ -76,15 +78,15 @@ Main:                                                       ; TODO use this memo
 ;===============
 
                     SET_ES_B800
-                    push ax bx cx dx si               ; write_string check
+                    push ax bx cx dx si                     ; write_string check
                     mov dx, 0502h
-                    mov di, 0                         ; relative string start
+                    mov di, 0                               ; relative string start
                     push offset CHECK
                     call Write_str_buf
                     pop si dx cx bx ax
                     SET_ES_DS
 
-                    ; mov bx, 1                            ; set mode off
+                    ; mov bx, 1                             ; set mode off
 Next:               
                     in al, 60h                              ; scanf
                     cmp al, 1                               ; (scan_code == 'esc')break;

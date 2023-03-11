@@ -181,14 +181,12 @@ Write_str_buf       proc
 
                     call Set_coords                         ; get new dx
 
-                    push si
-                    push ax
+                    push ax bx cx dx di
 
                     mov si, [bp+4]                          ; get shift
                     call Write_line
 
-                    pop ax
-                    pop si
+                    pop di dx cx bx ax
 
                     pop bp
                     retn 2
@@ -213,6 +211,8 @@ Clr_Rect        proc
     ;                 mov ax, [si]
     ;                 mov es, ax
 ;=================
+                    push si di
+
                     push bx
                     call Get_Vid_Mem
                     add di, bx
@@ -221,10 +221,8 @@ Clr_Rect        proc
                     mov ax, BL_SPACE                        ; black space
 
 @@First:                                                    ; height
-                    push di si cx     
-
+                    push di si cx
                     mov cx, bx                              ;--------------------
-
 @@Second:                                                   ; width
                     stosw                                   ; ax->es:di
                     loop @@Second                           ;--------------
@@ -235,6 +233,8 @@ Clr_Rect        proc
 
                     loop @@First
 
+                    pop di si
+
                     ret
                     endp
 ;------------------------------------------------
@@ -242,7 +242,8 @@ Clr_Rect        proc
 ;------------------------------------------------
 ;Save all reg values in draw buffer
 ;------------------------------------------------
-;Entry:    DX - coordinates
+;Entry:    p1-p13 - registers
+;          DX - coordinates
 ;          DI - initial register address
 ;Exit:     Nothing
 ;Expects:   
@@ -256,9 +257,11 @@ Print_regs          proc
                     ; mov es, ax
                     ; pop ax si
 ;=================
-                    push cs ss es ds es sp bp di si dx cx bx ax
+                    ; push cs ss es ds es sp bp di si dx cx bx ax
 
-                    mov cx, 13d
+                    push ds es sp bp di si dx cx bx ax
+
+                    mov cx, 10d
                     mov dx, 4503h                           ; register
                     mov di, offset Draw_buf
 @@Next:         
@@ -318,5 +321,13 @@ Save_to_vidmem      proc
                                                             ; todo add special check(use other buffers!)
                     loop @@Next
                     SET_ES_DS                               ; es = ds bx = 0   
+                    endp
+;------------------------------------------------
+
+;------------------------------------------------
+dbg                 proc
+                    ; SET_ES_B800
+                    ; SET_ES_DS 
+                    ret
                     endp
 ;------------------------------------------------
