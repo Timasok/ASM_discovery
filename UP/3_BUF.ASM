@@ -101,7 +101,7 @@ STAB_DS             macro
 ;           DL - y left top coordinate(0-25)
 ;           DI - initial shift in memory
 ;Exit:      Nothing
-;Expects:   ES = offset draw_buf
+;Expects:   ES = segment draw_buf
 ;Destroys:  
 ;------------------------------------------------
 Write_in_hex    proc
@@ -179,15 +179,14 @@ Write_str_buf       proc
                     push bp
                     mov bp, sp
 
-                    call Set_coords                         ; get new dx
-
                     push ax bx cx dx di
+                    call Set_coords                         ; get new dx
 
                     mov si, [bp+4]                          ; get shift
                     call Write_line
 
                     pop di dx cx bx ax
-
+                    
                     pop bp
                     retn 2
                     endp
@@ -205,14 +204,11 @@ Write_str_buf       proc
 ;Destroys:  AX, BX, CX, ES, DI, DX
 ;------------------------------------------------
 Clr_Rect        proc
-
 ;=================
     ;                 mov si, offset Buf_seg                ; set vidmem
     ;                 mov ax, [si]
     ;                 mov es, ax
 ;=================
-                    push si di
-
                     push bx
                     call Get_Vid_Mem
                     add di, bx
@@ -221,8 +217,10 @@ Clr_Rect        proc
                     mov ax, BL_SPACE                        ; black space
 
 @@First:                                                    ; height
-                    push di si cx
+                    push di si cx     
+
                     mov cx, bx                              ;--------------------
+
 @@Second:                                                   ; width
                     stosw                                   ; ax->es:di
                     loop @@Second                           ;--------------
@@ -232,8 +230,6 @@ Clr_Rect        proc
                     add di, 160d
 
                     loop @@First
-
-                    pop di si
 
                     ret
                     endp
@@ -321,13 +317,5 @@ Save_to_vidmem      proc
                                                             ; todo add special check(use other buffers!)
                     loop @@Next
                     SET_ES_DS                               ; es = ds bx = 0   
-                    endp
-;------------------------------------------------
-
-;------------------------------------------------
-dbg                 proc
-                    ; SET_ES_B800
-                    ; SET_ES_DS 
-                    ret
                     endp
 ;------------------------------------------------

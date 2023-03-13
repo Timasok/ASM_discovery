@@ -52,17 +52,12 @@ Main:
 
                     add bx, 2
                     
-                    mov ax, es:[bx]                         ; save old int
+                    mov ax, es:[bx]                             ; save old int
                     mov word ptr Old09Seg, ax
                     mov ax, cs
-                    mov word ptr es:[bx], ax                ; get new int
+                    mov word ptr es:[bx], ax                    ; get new int
                     sti
                     
-                    mov ax, 3100h                           ; terminate and stay resident
-                    mov dx, offset EOP                      ; save end of program
-                    shr dx, 4                               ; dx /= 16
-                    inc dx
-                    mov cl, 1h                              ; set hot_key
 
                     SET_VID_PTR                                 ; ES
                     xor di, di                                  ; DI
@@ -74,9 +69,17 @@ Main:
 @@Next:             movsw                                       ; ds:si -> ax -> es:di
                     loop @@Next
 
-Next:               in al, 60h
-                    cmp al, cl                              ; if(scan == 'esc')break;
-                    jne Next
+                    int 9h
+                    ; int 8h
+
+; Next:               in al, 60h
+;                     cmp al, cl                              ; if(scan == 'esc')break;
+;                     jne Next
+                    mov ax, 3100h                               ; terminate and stay resident
+                    mov dx, offset EOP                          ; save end of program
+                    shr dx, 4                                   ; dx /= 16
+                    inc dx
+                    mov cl, 1h                                  ; set hot_key
 
                     int 21h
 EOP:

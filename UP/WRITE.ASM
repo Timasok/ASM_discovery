@@ -59,7 +59,7 @@ Write_string        proc
 ;------------------------------------------------
 
 ;------------------------------------------------
-;Write line from cmd arg
+;Write line from cmd arg to coords by dx in es 
 ;------------------------------------------------
 ;Entry:     DH - x0 coordinate(0-80)
 ;           DL - y0 coordinate(0-25)
@@ -145,8 +145,7 @@ Write_line      proc
                 add bx, 2
 
 @@Loop:         loop @@Write_main_part
-
 @@Finish:       ret
-@@Color:        db 0
+@@Color:        db 07h
                 endp
 ;------------------------------------------------

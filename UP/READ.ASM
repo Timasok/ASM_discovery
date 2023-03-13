@@ -165,7 +165,7 @@ My_Atoi         proc
 ;------------------------------------------------
 
 ;------------------------------------------------
-;MyAtoh(can be not from comand line)
+;MyAtoh(can be not from comand line) reads color
 ;------------------------------------------------
 ;Entry:     hex number on SI address
 ;Exit:      AL = number
@@ -183,7 +183,7 @@ My_Atoh         proc
 
                 sub al, 55d
                 cmp al, 15
-                jb @@Wrong_guess
+                jb @@Wrong_guess                        ; меньше 
 
                 pop bx                                  ; use bx as a garbage bin
                 jmp @@Finish_iteration
@@ -206,6 +206,108 @@ My_Atoh         proc
                 mov ax, dx
                 xor ah, ah
                 
+                ret
+                endp
+;------------------------------------------------
+
+;------------------------------------------------
+;MyAtoh(can be not from comand line) reads color
+;------------------------------------------------
+;Entry:     hex number on SI address
+;Exit:      AL = number
+;Expects:   SI = 0080h                              ; write line address
+;Destroys:  AX, BX, CX, DX
+;------------------------------------------------
+Num_to_Hex      proc
+
+                xor dx, dx
+                xor ah, ah
+                mov cx, 4                               ; set counter
+
+@@Next:         lodsb
+                push ax
+                
+                sub al, 48d               
+                cmp al, 10
+                jae @@Wrong_guess                        ; меньше 
+
+                pop bx                                  ; use bx as a garbage bin
+                jmp @@Finish_iteration
+
+@@Wrong_guess:  pop ax
+                sub al, 55d
+
+@@Finish_iteration:
+
+                push cx                 
+
+                dec cx                                  ; --cl
+                shl cx, 2                               ; cl *= 4
+
+                shl ax, cl
+                add dx, ax                              ; save read digit to the correct position 
+
+                pop cx
+                loop @@Next
+
+                mov ax, dx
+                xor ah, ah
+                
+                ret
+                endp
+;------------------------------------------------
+
+
+
+;------------------------------------------------
+;Translates hex num into number
+;------------------------------------------------
+;Entry:		DI = beginning adress of hex num
+;Exit:		AX = translated number
+;Expects:	None
+;Destroys:	AX
+;------------------------------------------------
+Hton	proc
+                push di
+                push cx
+                push bx
+                mov cx, 4d		                ; cx = 4
+
+@@Next_Symbol:
+                mov bx, bx		                ; bx = 0
+                mov bl, [di]		            ; bl = [di]
+
+@@Check_For_Hex_Num:
+                cmp bl, "0"		
+                jb @@Check_For_Hex_Symb         ; bl < "0"
+                cmp bl, "9"		
+                ja @@Check_For_Hex_Symb         ; bl > "9"
+                jmp @@Translate_Num
+
+@@Check_For_Hex_Symb:
+                cmp bl, "A"		
+                jb @@Exit_Function	            ; bl < "A"
+                cmp bl, "F"
+                ja @@Exit_Function	            ; bl > "F"
+                jmp @@Translate_Ltr
+
+@@Translate_Num:
+                sub bl, 48d		                ; num symb --> num
+                jmp @@Process_Num
+
+@@Translate_Ltr:
+                sub bl, 55d		                ; ltr symb -> num
+
+@@Process_Num:
+                shl ax, 4		                ; ax *= 16
+                add ax, bx		                ; ax += bx
+                inc di			                ; di++
+                loop @@Next_Symbol
+
+@@Exit_Function:	
+                pop bx
+                pop cx
+                pop di
                 ret
                 endp
 ;------------------------------------------------

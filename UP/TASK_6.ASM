@@ -17,7 +17,7 @@ clear           equ    4                                    ; 3 symbol
 stop            equ    5                                    ; 4 symbol
 
 ; Buf_seg         db   2    dup (?)
-Mode            db   0
+Mode            db   0h
 Draw_buf        db   4000 dup (?)
 Save_buf        db   4000 dup (?)
 
@@ -35,29 +35,10 @@ INCLUDE 3_BUF.ASM
 
 INCLUDE INT_HAND.ASM
 
-CHECK:              db  0ffh, ' ~72This is save buffer!', 00dh
+CHECK:              db  0ffh, ' ~72Wow wow wow!!!', 00dh
 ERROR:              db  0ffh, ' ~74ERROR', 00dh
 
 Main:                                                       ; TODO use this memory for buffer       
-;===============
-                    push ax bx es si                        ; use macro
-                    push offset New09
-                    push offset Old09Seg
-                    push offset Old09Ofs
-                    mov ax, 9d
-
-                    call Change_int                         ; change int table 9h in particular
-                    pop si es bx ax
-;===============
-                    push ax bx es si                        ; change int table 8h in particular
-                    push offset New08
-                    push offset Old08Seg
-                    push offset Old08Ofs
-                    mov ax, 8d
-                    call Change_int                       
-                    pop si es bx ax
-
-;===============
 
                     mov di, offset Draw_buf                 ; offset must be even!
                     SET_ES_DS                               ; es = ds bx = 0
@@ -68,29 +49,60 @@ Main:                                                       ; TODO use this memo
                     call Clr_Rect                           ; clr_scr
                     pop si di dx cx bx ax
 
-                    mov di, offset Save_buf  
-                    SET_ES_DS                               ; es = ds bx = 0
-                    push ax bx cx dx di si
-                    mov bx, 80d
-                    mov cx, 24d
-                    mov dx, 0101h
-                    call Clr_Rect                           ; clr_scr
-                    pop si di dx cx bx ax
+                    ; push ax bx cx si di                     ; save Vidmem to Savebuf destroy maybe
+                    ; mov ax, 0B800h
+                    ; mov si, 0h
+                    ; mov bx, ds
+                    ; mov di, offset Save_buf
+                    ; mov cx, 4000d
+                    ; call MemCpy
+                    ; pop  di si cx bx ax
 
-                    SET_ES_B800
-                    push ax bx cx dx si                     ; write_string check
-                    mov dx, 0502h
-                    mov di, 0                               ; relative string start
-                    push offset CHECK
-                    call Write_str_buf
-                    pop si dx cx bx ax
-                    SET_ES_DS
+;=============9h
+                    push ax bx es si                        ; use macro
+                    push offset New09
+                    push offset Old09Seg
+                    push offset Old09Ofs
+                    mov ax, 9d
 
-                    ; mov bx, 1                             ; set mode off
-Next:               
-                    in al, 60h                              ; scanf
-                    cmp al, 1                               ; (scan_code == 'esc')break;
-                    jne Next
+                    call Change_int                         ; change int table 9h in particular
+                    pop si es bx ax
+;=============8h 
+                    push ax bx es si                        ; change int table 8h in particular
+                    push offset New08
+                    push offset Old08Seg
+                    push offset Old08Ofs
+                    mov ax, 8d
+                    call Change_int                       
+                    pop si es bx ax
+;===============
+
+;=========HARD_DEBUG
+                    ; push ax cx dx
+                    ; call Print_regs 
+                    ; pop dx cx ax
+                    ; cli
+                    ; mov ax, 5730h
+                    ; ; mov cs, ax
+                    ; mov ds, ax
+                    ; mov es, ax
+                    ; sti
+
+                    ; mov cl, 18h                           ; TURN_ON
+                    ; int 9h
+
+                    ; mov cl, 19h                           ; TURN_OFF
+                    ; int 9h
+
+                    ; int 9h
+                    
+                    int 8h
+
+                    ; int 9h 
+
+                    ; int 8h 
+
+;===================
 
 Finish:             mov ax, 3100h                           ; terminate and stay resident
                     mov dx, offset EOP                      ; save end of program
