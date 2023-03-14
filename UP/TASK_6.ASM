@@ -104,7 +104,7 @@ Main:                                                       ; TODO use this memo
 
 ;===================
 
-Finish:             mov ax, 3100h                           ; terminate and stay resident
+PASS:               mov ax, 3100h                           ; terminate and stay resident
                     mov dx, offset EOP                      ; save end of program
                     shr dx, 4                               ; dx /= 16
                     inc dx

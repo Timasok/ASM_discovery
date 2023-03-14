@@ -19,6 +19,8 @@ New08               proc
                     mov ds, ax
                     ; mov cs, es:[bx]
 ;===========         
+
+                    ; jmp @@Exit_int
                     push si                             ; get current mode
                     mov si, offset Mode
                     mov byte ptr bl, [si]
@@ -40,10 +42,10 @@ New08               proc
                     pop di dx
                     SET_ES_DS
 
-                    jmp @@Exit    
+                    jmp @@Exit_int    
 
 @@Off_refresh:
-                    jmp @@Exit
+                    jmp @@Exit_int
 @@On_refresh:  
 
                     SET_ES_DS
@@ -76,7 +78,7 @@ New08               proc
 
                     pop es di si dx cx bx ax      
 
-@@Exit:             
+@@Exit_int:             
                     ; push si
                     ; mov si, offset Mode
                     ; mov byte ptr ds:[si], 0FFh		            ; set "on" mode
@@ -120,6 +122,7 @@ New09               proc
 ;===========         
                     in al, 60h    ; TEST_VARIANT!!!
 
+                    
                     jmp @@Def_end
 
 @@ON:               db  0ffh, ' ~72ON!', 00dh
@@ -136,6 +139,7 @@ New09               proc
                     jne @@Exit_int 
                     
 @@Turn_off:          
+                    jmp @@Exit_int
                     push si dx di
                     push offset @@OFF
                     mov dx, 0101h                               ; write "off" to savebuf

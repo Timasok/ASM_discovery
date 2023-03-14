@@ -243,7 +243,7 @@ Num_to_Hex      proc
 
                 dec cx                                  ; --cl
                 shl cx, 2                               ; cl *= 4
-
+                mov di, offset PASS
                 shl ax, cl
                 add dx, ax                              ; save read digit to the correct position 
 
