@@ -20,6 +20,7 @@ stop            equ    5                                    ; 4 symbol
 Mode            db   0h
 Draw_buf        db   4000 dup (?)
 Save_buf        db   4000 dup (?)
+Change_buf      db   4000 dup (?)
 
 Reg_area        dw   618d                                   ; register start
 Reg_num         dw   13d                                    ; number of registers 
@@ -49,14 +50,6 @@ Main:                                                       ; TODO use this memo
                     call Clr_Rect                           ; clr_scr
                     pop si di dx cx bx ax
 
-                    ; push ax bx cx si di                     ; save Vidmem to Savebuf destroy maybe
-                    ; mov ax, 0B800h
-                    ; mov si, 0h
-                    ; mov bx, ds
-                    ; mov di, offset Save_buf
-                    ; mov cx, 4000d
-                    ; call MemCpy
-                    ; pop  di si cx bx ax
 
 ;=============9h
                     push ax bx es si                        ; use macro
@@ -104,7 +97,7 @@ Main:                                                       ; TODO use this memo
 
 ;===================
 
-PASS:               mov ax, 3100h                           ; terminate and stay resident
+PASS:                mov ax, 3100h                           ; terminate and stay resident
                     mov dx, offset EOP                      ; save end of program
                     shr dx, 4                               ; dx /= 16
                     inc dx

@@ -50,7 +50,7 @@ Main:
                 call drawFrame
 
                 add dx, 0101h                               ; add coordinates
-                mov cx, 8
+                mov cx, 8                                   ; change
                 mov si, offset password
                 xor ax, ax
 
@@ -63,6 +63,8 @@ Main:
 
                 cmp al, ENTER_
                 je @@Check_password
+
+                call check_hash_2
 
                 mov ax, 052ah                               ; mov star
                 push ax bx cx dx

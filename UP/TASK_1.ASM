@@ -25,6 +25,8 @@ Main:
                 push bp
                 mov bp, si
 
+                ; xor ax, ax
+
                 SET_VID_PTR
 
                 mov cx, 2d                      ; set number of arguments that next function is going to use
@@ -38,5 +40,6 @@ Main:
                 call Write_string
                 
                 pop bp
+PASS:
                 EXIT
 end             Start

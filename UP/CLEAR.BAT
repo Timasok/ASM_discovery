@@ -1,4 +1,4 @@
 @del *.lst
 @del *.map
 @del *.obj
-@del *.com
+@REM @del *.com
