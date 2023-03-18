@@ -59,13 +59,12 @@ New08               proc
                     lea si, Draw_buf                        ; SI
                     mov cx, 2000d                           ; refresh window
 
-@@Next:             mov word ptr ax, es:[di]                ; ds:si -> ax -> es:di
-                    mov bx, [si]                            ; cmp vidmem[i] and draw_buf[i]
-                    cmp bx, ax
+@@Next:             lodsw
+                    scasw
                     je @@Equal
 
 @@Not_equal:        mov word ptr ax, es:[di]                ; vidmem[i] != draw_buf[i] vidmem->save_buf
-                    mov word ptr ds:[offset Save_buf + di], ax
+                    mov word ptr ds:[offset Change_buf + di], ax
                     movsw
 
                     jmp @@End_loop
@@ -120,8 +119,7 @@ New09               proc
                     xor ax, ax
                     xor bx, bx
 ;===========         
-                    in al, 60h    ; TEST_VARIANT!!!
-
+                    in al, 60h
                     
                     jmp @@Def_end
 
@@ -129,14 +127,13 @@ New09               proc
 @@OFF:              db  0ffh, ' ~74OFF', 00dh       
               
 @@Def_end:          
-;==DEBUG
                     ; mov al, cl  ;ONLY TEST VARIANT!!!
                     SET_ES_DS                                 ; set vidmem
                     cmp al, 18h                               ; hot key "on" - ctrl+O (->save)
                     je @@Turn_on
 
                     cmp al, 19h                               ; hot key "off" - ctrl+P(save->vid)
-                    jne @@Exit_int 
+                    jne @@Train_to_exit 
                     
 @@Turn_off:          
                     jmp @@Exit_int
@@ -146,8 +143,7 @@ New09               proc
                     mov di, offset Save_buf
                     call Write_str_buf
                     push di dx si
-                    
-                    ; copy from SaveBuf to VideoMem
+                                                                ; copy from SaveBuf to VideoMem
                     push ax bx cx si di                         
                     mov ax, ds		                            ; segment of src copying
                     mov si, offset Save_buf			            ; address of src copying
@@ -162,7 +158,7 @@ New09               proc
                     mov byte ptr ds:[si], 00h		            ; set "off" mode
                     pop si
 
-                    jmp @@Exit_int
+@@Train_to_exit:    jmp @@Exit_int
 @@Turn_on:          
 
                     push si
@@ -183,6 +179,16 @@ New09               proc
                     mov si, 0h			                        ; address of src copying
                     mov bx, ds			                        ; segment of dst copying
                     mov di, offset Save_buf 	                ; address of dst copying
+                    mov cx, 4000d			                    ; number of copying buf
+                    call MemCpy			                        
+                    pop  di si cx bx ax
+
+                    ; copy from DrawBuf to VideoMem
+                    push ax bx cx si di
+                    mov ax, ds			                        ; segment of src copying
+                    mov si, offset Draw_buf		                ; address of src copying
+                    mov bx, 0B800h                              ; segment of dst copying
+                    mov di, 0h 	                                ; address of dst copying
                     mov cx, 4000d			                    ; number of copying buf
                     call MemCpy			                        
                     pop  di si cx bx ax
