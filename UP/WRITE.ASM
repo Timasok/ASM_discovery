@@ -127,12 +127,7 @@ Write_line      proc
                 jmp @@Loop
 @@Stays_the_same:
 ;===============                                    ; sleep 
-                ; push cx dx ax
-                ; mov cx, 0001h
-                ; mov dx, 0FFFFh
-                ; mov ah, 86h
-                ; int 15h
-                ; pop ax dx cx
+                ; SLEEP
 ;===============
                 mov di, offset @@Color              ; set label ptr
                 mov ah, cs:[di]

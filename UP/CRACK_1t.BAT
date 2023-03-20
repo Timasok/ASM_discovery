@@ -1,6 +1,9 @@
-@Set filename=CRACK_ME(1)
+@Set filename=CRACK_1
 @Set input=
 @Set execute=%filename%.com
+
+@tasm /la %filename%.asm
+@tlink /t %filename%.obj
 @cls
 td %execute%
 

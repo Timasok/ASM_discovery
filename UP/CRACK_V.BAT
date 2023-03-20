@@ -1,4 +1,4 @@
-@Set filename=CRACK_ME(1)
+@Set filename=CRACK_V
 @Set input=
 @Set execute=%filename%.com
 @cls

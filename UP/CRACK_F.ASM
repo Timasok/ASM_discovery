@@ -10,10 +10,15 @@ Calc_hash           proc
                     mov cx, 4
                     xor bx, bx
                     xor ax, ax
+; h = h*33 + 5
+
+; bx = bx*33 + 
+
 @@Next:             
                     mov byte ptr al, [si]                        ; your entry
                     inc si
                     add bx, ax
+                    and bx, 7fffh
 
                     loop @@Next
 

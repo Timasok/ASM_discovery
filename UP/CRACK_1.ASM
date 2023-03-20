@@ -18,8 +18,7 @@ INCLUDE CRACK_F.ASM
 MESSAGE:       db  0ffh, ' ~7CEnter your password (4 symbols)', 00dh
 Granted:       db  0ffh, ' ~72ACCESS GRANTED', 00dh
 Denied:        db  0ffh, ' ~74ACCESS DENIED ', 00dh ; 14 symbols
-value:         db  'ak47' 
-password:      db  4 dup (?)
+
 Main:  
 		        mov bx, 0b800h					    ; write video mem address beginning
 		        mov es, bx
@@ -96,6 +95,8 @@ Main:
                 pop di dx si
                 jmp @@End
 @@End:
-PASS:
                 EXIT
+value:          db  'ak47' 
+password:       db  4 dup (?)
+PASS:
 end             Start

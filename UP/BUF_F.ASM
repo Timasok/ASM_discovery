@@ -246,24 +246,16 @@ Clr_Rect        proc
 ;Destroys:  ax cx di
 ;------------------------------------------------
 Print_regs          proc
-;=================  
-                    ; push si ax
-                    ; mov si, offset Buf_seg                  ; set vidmem
-                    ; mov ax, [si]
-                    ; mov es, ax
-                    ; pop ax si
-;=================
-                    ; push cs ss es ds es sp bp di si dx cx bx ax
-
+                    ; increament sp 4*2
                     push ds es sp bp di si dx cx bx ax
-
                     SET_ES_B800
                     mov cx, 10d
                     mov dx, 4503h                           ; register
                     mov di, 0
-@@Next:         
-                    pop ax                                  ; get current register
 
+@@Next:
+                    SET_ES_B800
+                    pop ax                                  ; get current register
                     call Write_in_hex 
                     add dx, 0001h                           ; y++
 
@@ -272,7 +264,38 @@ Print_regs          proc
                     ret
                     endp
 ;------------------------------------------------
+; Print_regs          proc
 
+;                     ; increament sp 4*2
+;                     SET_ES_B800
+;                     mov bx, sp
+;                     mov cx, 10d
+;                     mov dx, 1003h                           ; register
+;                     mov di, 0
+; @@Next: 
+;                     mov word ptr ax, ds:[bx]                ; get current register
+;                     add bx, 2
+
+;                     call Write_in_hex 
+;                     add dx, 0001h                           ; y++
+
+;                     loop @@Next
+
+;                     ret
+;                     endp
+
+;                     jmp @@Start_int
+; @@Regs:		        db	"~74DS ", 00dh
+;                     db	"ES ", 00dh
+;                     db	"SP ", 00dh
+;                     db	"BP ", 00dh
+;                     db	"DI ", 00dh
+;                     db	"SI ", 00dh
+;                     db	"DX ", 00dh
+;                     db	"CX ", 00dh
+;                     db	"BX ", 00dh
+;                     db	"~74AX ", 00dh        
+; @@Start_int:
 
 ;------------------------------------------------
 ;Vidmem_to_save

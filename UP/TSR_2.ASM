@@ -58,19 +58,18 @@ Main:
                     call Change_int                       
                     pop si es bx ax
 ;===============
-
 ;=========HARD_DEBUG
 
-                    ; int 8h
-                    ; mov cl, 18h 
-                    ; int 9h 
-                    ; int 8h
-                    ; mov cl, 19h
+                    ; int 8h                                  ; test refresh
+                    ; mov cl, 18h                             ; test turn on  
                     ; int 9h
-                    ; int 8h
-                    ; mov cl, 18h 
+                    ; int 8h                                  ; test refresh
+                    ; mov cl, 19h                             ; test turn off
                     ; int 9h
-                    ; int 8h 
+                    ; int 8h                                  ; test refresh
+                    ; mov cl, 18h                             ; test turn on
+                    ; int 9h
+                    ; int 8h                                  ; test refresh
 ;===================
 
 PASS:               mov ax, 3100h                           ; terminate and stay resident
