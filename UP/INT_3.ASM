@@ -74,24 +74,18 @@ Old08Seg            dw 0
 ;------------------------------------------------
 New09               proc
                     cli
-                    push ax bx cx dx si di bp sp es ds
-
+                    push ax
                     mov ax, 9d
                     call Set_int_reg
+                    pop ax
 
-                    in al, 60h ;ONLY TEST VARIANT!!!
-                    ; mov al, cl  ;ONLY TEST VARIANT!!!
-                    
                     jmp @@Code_start
 @@ON:               db  0ffh, ' ~72ON!', 00dh
 @@OFF:              db  0ffh, ' ~74OFF', 00dh       
 @@Code_start:          
-                    SET_ES_B800
-                    mov ah, 4eh                             ; set color(red)
-                    mov bx, 160d*5 + 80d                    ; get vid mem - 5th line
-                    mov es:[bx], ax         
-                    
-                    call Handle_key
+                    in al, 60h 
+                    HANDLE_KEY
+                    push ax bx cx dx si di bp sp es ds
 
                     call Get_mode
                     je @@Turn_on
@@ -105,7 +99,7 @@ New09               proc
                     call Write_str_buf
                     ; push di dx si
 
-                    jmp @@Exit_int
+                    jmp @@Exit_hot
                     
 @@Turn_on:          
                     SET_ES_B800
@@ -116,19 +110,20 @@ New09               proc
                     call Write_str_buf
                     ; push di dx si
 
-@@Exit_int:
+@@Exit_hot:
                     in al, 61h                                  ; recieve scan code                 PPI->
                     or al, 80h                                  ; 10000000 disable keyboard no matter what is set in al
 
                     out 61h, al                                 ; verify that scan code was recieved ->PPI
                     and al, not 80h                             ; 01111111 enable keyboard
 
-                    ; mov al, 20h                             ; send signal to 20 port INTC
-                    ; out 20h, al
-
+                    mov al, 20h                             ; send signal to 20 port INTC
+                    out 20h, al
+                    
                     pop  ds es sp bp di si dx cx bx ax
+@@No_changes:                                                  ; exit if it's not a hot key
+@@The_end:          
                     sti
-
                     db 0EAh                                   ; jmp comand
 Old09Ofs            dw 0
 Old09Seg            dw 0

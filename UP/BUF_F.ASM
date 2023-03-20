@@ -352,8 +352,8 @@ Save_to_vidmem      proc
 ;Expects:   
 ;Destroys:  al si
 ;------------------------------------------------
-Handle_key      proc
-
+HANDLE_KEY      macro
+                nop
                 cmp al, 18h                               ; hot key "on" - ctrl+O (->save)
                 je @@On
 
@@ -369,9 +369,8 @@ Handle_key      proc
 
 @@Finish:       mov si, offset Mode
                 mov byte ptr ds:[si], al	            ; set "on" mode
-
-@@No_changes:   ret
-                endp
+                nop
+                endm
 ;------------------------------------------------
 
 ;------------------------------------------------
